@@ -1,4 +1,4 @@
-package main
+package configure
 
 import (
 	"flag"
@@ -14,7 +14,7 @@ type Config struct {
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 }
 
-func (cfg *Config) readStartParams() bool {
+func (cfg *Config) ReadStartParams() bool {
 	err := env.Parse(cfg)
 	if err != nil {
 		logger.Logger.Info("Не удалось найти переменные окружения ")
