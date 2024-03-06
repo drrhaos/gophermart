@@ -8,6 +8,8 @@ import (
 	"gophermart/internal/configure"
 	"gophermart/internal/handlers"
 	"gophermart/internal/logger"
+	"gophermart/internal/store"
+	"gophermart/internal/store/pg"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
@@ -32,13 +34,17 @@ func main() {
 		os.Exit(0)
 	}
 
+	storage := &store.StorageContext{}
+
+	storage.SetStorage(pg.NewDatabase(cfg.DatabaseURI))
+
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
 
 	logger.Logger.Info("Сервер запущен", zap.String("адрес", cfg.RunAddress))
 
 	r.Post(urlPostUserRegister, func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostUserRegister(w, r)
+		handlers.PostUserRegister(w, r, storage)
 	})
 	r.Post(urlPostUserLogin, func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostUserLogin(w, r)
