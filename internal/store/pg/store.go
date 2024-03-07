@@ -48,3 +48,13 @@ func (db *Database) UserRegister(ctx context.Context, user string, password stri
 
 	return true
 }
+
+func (db *Database) UserLogin(ctx context.Context, user string, password string) bool {
+
+	return true
+}
+
+func (db *Database) UserOrders(ctx context.Context, order int) bool {
+
+	return true
+}

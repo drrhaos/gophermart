@@ -11,7 +11,7 @@ import (
 	"gophermart/internal/store"
 	"gophermart/internal/store/pg"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
@@ -47,10 +47,10 @@ func main() {
 		handlers.PostUserRegister(w, r, storage)
 	})
 	r.Post(urlPostUserLogin, func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostUserLogin(w, r)
+		handlers.PostUserLogin(w, r, storage)
 	})
 	r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostUserOrders(w, r)
+		handlers.PostUserOrders(w, r, storage)
 	})
 	r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
 		handlers.GetUserOrders(w, r)
