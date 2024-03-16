@@ -4,16 +4,44 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"gophermart/internal/logger"
 	"gophermart/internal/store"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/jwtauth"
 )
 
-type AuthorizationData struct {
+type User struct {
 	Login    string `json:"login"`    // логин
 	Password string `json:"password"` // параметр, принимающий значение gauge или counter
+}
+
+type StatusOrders struct {
+	Number     string `json:"number"`      // номер заказа
+	Status     string `json:"status"`      // статус расчёта начисления
+	Accrual    int64  `json:"accrual"`     // рассчитанные баллы к начислению, при отсутствии начисления — поле отсутствует в ответе.
+	UploadedAt string `json:"uploaded_at"` // временЯ загрузки, формат даты — RFC3339.
+}
+
+type Balance struct {
+	Current   float64 `json:"current"`
+	Withdrawn float64 `json:"withdrawn"`
+}
+
+type BalanceWithdrawn struct {
+	Order string  `json:"order"`
+	Sum   float64 `json:"sum"`
+}
+
+type BalanceWithdrawals struct {
+	Order       string  `json:"order"`
+	Sum         float64 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"` // временЯ загрузки, формат даты — RFC3339.
 }
 
 // PostUserRegister Регистрация пользователя
@@ -22,15 +50,15 @@ type AuthorizationData struct {
 // @Produce json
 // @Success 200 {string}
 // @Router /api/user/register [post]
-func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
+func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store.StorageContext, tokenAuth *jwtauth.JWTAuth) {
 	// 200 — пользователь успешно зарегистрирован и аутентифицирован;
 	// 400 — неверный формат запроса;
 	// 409 — логин уже занят;
 	// 500 — внутренняя ошибка сервера.
-	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Microsecond)
+	ctx, cancel := context.WithTimeout(req.Context(), 5*time.Second)
 	defer cancel()
 
-	var authorizationData AuthorizationData
+	var user User
 	var buf bytes.Buffer
 
 	_, err := buf.ReadFrom(req.Body)
@@ -39,18 +67,35 @@ func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store
 		return
 	}
 
-	if err = json.Unmarshal(buf.Bytes(), &authorizationData); err != nil {
+	if err = json.Unmarshal(buf.Bytes(), &user); err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	exist := storage.UserRegister(ctx, authorizationData.Login, authorizationData.Password)
-	if exist {
+	err = storage.UserRegister(ctx, user.Login, user.Password)
+	if err != nil && errors.Is(err, store.ErrLoginDuplicate) {
 		res.WriteHeader(http.StatusConflict)
+		return
+	} else if err != nil && errors.Is(err, store.ErrLoginDuplicate) {
+		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	claims := jwt.MapClaims{
+		"username": user.Login,
+	}
+
+	_, tokenString, err := tokenAuth.Encode(claims)
+	if err != nil {
+		logger.Logger.Warn("Произошла ошибка генерации токена")
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	bearer := "Bearer " + tokenString
+	res.Header().Set("Authorization", bearer)
 	res.WriteHeader(http.StatusOK)
+	logger.Logger.Info("Новый пользователь аутентифицирован")
 }
 
 // PostUserLogin Аутентификация пользователя
@@ -59,15 +104,15 @@ func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store
 // @Produce json
 // @Success 200 {string}
 // @Router /api/user/login [post]
-func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
+func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.StorageContext, tokenAuth *jwtauth.JWTAuth) {
 	// 200 — пользователь успешно аутентифицирован;
 	// 400 — неверный формат запроса;
 	// 401 — неверная пара логин/пароль;
 	// 500 — внутренняя ошибка сервера.
-	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Microsecond)
+	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
 
-	var authorizationData AuthorizationData
+	var user User
 	var buf bytes.Buffer
 
 	_, err := buf.ReadFrom(req.Body)
@@ -76,18 +121,33 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 		return
 	}
 
-	if err = json.Unmarshal(buf.Bytes(), &authorizationData); err != nil {
+	if err = json.Unmarshal(buf.Bytes(), &user); err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	exist := storage.UserLogin(ctx, authorizationData.Login, authorizationData.Password)
-	if exist {
-		res.WriteHeader(http.StatusConflict)
+	err = storage.UserLogin(ctx, user.Login, user.Password)
+	if err != nil {
+		logger.Logger.Warn("Пользователь не прошел проверку")
+		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
+	claims := jwt.MapClaims{
+		"username": user.Login,
+	}
+
+	_, tokenString, err := tokenAuth.Encode(claims)
+	if err != nil {
+		logger.Logger.Warn("Произошла ошибка генерации токена")
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	bearer := "Bearer " + tokenString
+	res.Header().Set("Authorization", bearer)
 	res.WriteHeader(http.StatusOK)
+	logger.Logger.Info("Пользователь аутентифицирован")
 }
 
 // PostUserOrders Загрузка номера заказа
@@ -138,26 +198,62 @@ func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.S
 	res.WriteHeader(http.StatusOK)
 }
 
-// Получение списка загруженных номеров заказов
+// GetUserOrders Получение списка загруженных номеров заказов
+// @Summary Получение списка загруженных номеров заказов
+// @Description Этот эндпоинт для получения списка загруженных номеров заказов
+// @Produce json
+// @Success 200 {string}
+// @Router /api/user/orders [get]
 func GetUserOrders(res http.ResponseWriter, req *http.Request) {
+	// 200 — успешная обработка запроса.
+	// 204 — нет данных для ответа.
+	// 401 — пользователь не авторизован.
+	// 500 — внутренняя ошибка сервера.
 
 	res.WriteHeader(http.StatusOK)
 }
 
-// Получение текущего баланса пользователя
+// GetUserBalance Получение текущего баланса пользователя
+// @Summary Получение текущего баланса пользователя
+// @Description Этот эндпоинт для получение текущего баланса пользователя
+// @Produce json
+// @Success 200 {string}
+// @Router /api/user/balance [get]
 func GetUserBalance(res http.ResponseWriter, req *http.Request) {
+	// 200 — успешная обработка запроса.
+	// 401 — пользователь не авторизован.
+	// 500 — внутренняя ошибка сервера.
 
 	res.WriteHeader(http.StatusOK)
 }
 
-// Запрос на списание средств
+// PostUserBalanceWithdraw Запрос на списание средств
+// @Summary Запрос на списание средств
+// @Description Этот эндпоинт на списание средств
+// @Produce json
+// @Success 200 {string}
+// @Router /api/user/balance/withdraw [post]
 func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request) {
+	// 200 — успешная обработка запроса;
+	// 401 — пользователь не авторизован;
+	// 402 — на счету недостаточно средств;
+	// 422 — неверный номер заказа;
+	// 500 — внутренняя ошибка сервера.
 
 	res.WriteHeader(http.StatusOK)
 }
 
-// Получение информации о выводе средств
+// GetUserBalance Получение информации о выводе средств
+// @Summary Получение информации о выводе средств
+// @Description Этот эндпоинт для получение информации о выводе средств
+// @Produce json
+// @Success 200 {string}
+// @Router /api/user/withdrawals [get]
 func GetUserWithdrawals(res http.ResponseWriter, req *http.Request) {
+	// 200 — успешная обработка запроса.
+	// 204 — нет ни одного списания.
+	// 401 — пользователь не авторизован.
+	// 500 — внутренняя ошибка сервер
 
 	res.WriteHeader(http.StatusOK)
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +27,10 @@ const urlGetUserWithdrawals = "/api/user/withdrawals"           // получе�
 
 var cfg configure.Config
 
+var tokenAuth *jwtauth.JWTAuth
+
 func main() {
+
 	logger.Init()
 	ok := cfg.ReadStartParams()
 	if !ok {
@@ -35,8 +39,9 @@ func main() {
 	}
 
 	storage := &store.StorageContext{}
-
 	storage.SetStorage(pg.NewDatabase(cfg.DatabaseURI))
+
+	tokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
@@ -44,10 +49,10 @@ func main() {
 	logger.Logger.Info("Сервер запущен", zap.String("адрес", cfg.RunAddress))
 
 	r.Post(urlPostUserRegister, func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostUserRegister(w, r, storage)
+		handlers.PostUserRegister(w, r, storage, tokenAuth)
 	})
 	r.Post(urlPostUserLogin, func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostUserLogin(w, r, storage)
+		handlers.PostUserLogin(w, r, storage, tokenAuth)
 	})
 	r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostUserOrders(w, r, storage)
