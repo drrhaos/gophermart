@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"gophermart/internal/logger"
 	"gophermart/internal/store"
+	"gophermart/internal/store/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,42 +24,12 @@ const urlGetUserBalance = "/api/user/balance"                   // получе�
 const urlPostUserBalanceWithdraw = "/api/user/balance/withdraw" // запрос на списание баллов с накопительного счёта в счёт оплаты нового заказа;
 const urlGetUserWithdrawals = "/api/user/withdrawals"           // получение информации о выводе средств с накопительного счёта пользователем.
 
-type MockDB struct {
-	users map[int]map[string]string
-}
-
-func (m *MockDB) UserRegister(ctx context.Context, login string, password string) error {
-	for _, user := range m.users {
-		if user["login"] == login {
-			return store.ErrLoginDuplicate
-		}
-	}
-	return nil
-}
-
-func (m *MockDB) UserLogin(ctx context.Context, login string, password string) error {
-	for _, user := range m.users {
-		if user["login"] == login && user["password"] != password {
-			return store.ErrLoginDuplicate
-		}
-	}
-	return nil
-}
-
-func (m *MockDB) UserOrders(ctx context.Context, order int) bool {
-	return true
-}
-
-func (m *MockDB) Ping(ctx context.Context) (exists bool) {
-	return true
-}
-
 func TestPostUserRegister(t *testing.T) {
 	logger.Init()
 	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
 
-	mockDB := &MockDB{
-		users: map[int]map[string]string{
+	mockDB := &mock.MockDB{
+		Users: map[int]map[string]string{
 			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC"},
 			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC"},
 		},
@@ -157,8 +127,8 @@ func TestPostUserLogin(t *testing.T) {
 	logger.Init()
 	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
 
-	mockDB := &MockDB{
-		users: map[int]map[string]string{
+	mockDB := &mock.MockDB{
+		Users: map[int]map[string]string{
 			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC"},
 			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC"},
 		},
