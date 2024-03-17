@@ -52,7 +52,7 @@ type BalanceWithdrawals struct {
 // @Param request body User true "JSON тело запроса"
 // @Success 200 {string}  string    "пользователь успешно аутентифицирован"
 // @Failure 400 {string}  string    "неверный формат запроса"
-// @Failure 404 {string}  string    "неверная пара логин/пароль"
+// @Failure 409 {string}  string    "логин уже занят"
 // @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/register [post]
 func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store.StorageContext, tokenAuth *jwtauth.JWTAuth) {
