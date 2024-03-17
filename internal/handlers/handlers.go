@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"gophermart/internal/logger"
+	"gophermart/internal/models"
 	"gophermart/internal/store"
 	"io"
 	"net/http"
@@ -16,40 +17,12 @@ import (
 	"github.com/go-chi/jwtauth"
 )
 
-type User struct {
-	Login    string `json:"login"`    // логин
-	Password string `json:"password"` // параметр, принимающий значение gauge или counter
-}
-
-type StatusOrders struct {
-	Number     string `json:"number"`      // номер заказа
-	Status     string `json:"status"`      // статус расчёта начисления
-	Accrual    int64  `json:"accrual"`     // рассчитанные баллы к начислению, при отсутствии начисления — поле отсутствует в ответе.
-	UploadedAt string `json:"uploaded_at"` // временЯ загрузки, формат даты — RFC3339.
-}
-
-type Balance struct {
-	Current   float64 `json:"current"`
-	Withdrawn float64 `json:"withdrawn"`
-}
-
-type BalanceWithdrawn struct {
-	Order string  `json:"order"`
-	Sum   float64 `json:"sum"`
-}
-
-type BalanceWithdrawals struct {
-	Order       string  `json:"order"`
-	Sum         float64 `json:"sum"`
-	ProcessedAt string  `json:"processed_at"` // временЯ загрузки, формат даты — RFC3339.
-}
-
 // PostUserRegister Регистрация пользователя
 // @Summary Регистрация пользователя
 // @Description Этот эндпоинт производит регистрацию пользователя
 // @Accept json
 // @Produce json
-// @Param request body User true "JSON тело запроса"
+// @Param request body models.User true "JSON тело запроса"
 // @Success 200 {string}  string    "пользователь успешно аутентифицирован"
 // @Failure 400 {string}  string    "неверный формат запроса"
 // @Failure 409 {string}  string    "логин уже занят"
@@ -59,7 +32,7 @@ func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store
 	ctx, cancel := context.WithTimeout(req.Context(), 5*time.Second)
 	defer cancel()
 
-	var user User
+	var user models.User
 	var buf bytes.Buffer
 
 	_, err := buf.ReadFrom(req.Body)
@@ -109,7 +82,7 @@ func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store
 // @Description Этот эндпоинт производит аутентификацию пользователя
 // @Accept json
 // @Produce json
-// @Param request body User true "JSON тело запроса"
+// @Param request body models.User true "JSON тело запроса"
 // @Success 200 {string}  string    "пользователь успешно аутентифицирован"
 // @Failure 400 {string}  string    "неверный формат запроса"
 // @Failure 401 {string}  string    "неверная пара логин/пароль"
@@ -119,7 +92,7 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
 
-	var user User
+	var user models.User
 	var buf bytes.Buffer
 
 	_, err := buf.ReadFrom(req.Body)

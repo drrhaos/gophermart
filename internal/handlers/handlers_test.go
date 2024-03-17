@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"gophermart/internal/logger"
+	"gophermart/internal/models"
 	"gophermart/internal/store"
 	"gophermart/internal/store/mock"
 	"net/http"
@@ -69,14 +70,14 @@ func TestPostUserRegister(t *testing.T) {
 	tests := []struct {
 		name       string
 		url        string
-		body       User
+		body       models.User
 		typeReqest string
 		want       want
 	}{
 		{
 			name: "пользователь успешно зарегистрирован и аутентифицирован",
 			url:  urlPostUserRegister,
-			body: User{
+			body: models.User{
 				Login:    "test3",
 				Password: "test3",
 			},
@@ -96,7 +97,7 @@ func TestPostUserRegister(t *testing.T) {
 		{
 			name: "логин уже занят",
 			url:  urlPostUserRegister,
-			body: User{
+			body: models.User{
 				Login:    "test",
 				Password: "test",
 			},
@@ -168,14 +169,14 @@ func TestPostUserLogin(t *testing.T) {
 	tests := []struct {
 		name       string
 		url        string
-		body       User
+		body       models.User
 		typeReqest string
 		want       want
 	}{
 		{
 			name: "пользователь успешно аутентифицирован",
 			url:  urlPostUserLogin,
-			body: User{
+			body: models.User{
 				Login:    "test",
 				Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
 			},
@@ -195,7 +196,7 @@ func TestPostUserLogin(t *testing.T) {
 		{
 			name: "неверная пара логин/пароль",
 			url:  urlPostUserLogin,
-			body: User{
+			body: models.User{
 				Login:    "test",
 				Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5CsmJLnPVA5W3y.EfNz7rC",
 			},
