@@ -107,10 +107,12 @@ func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store
 // PostUserLogin Аутентификация пользователя
 // @Summary Аутентификация пользователя
 // @Description Этот эндпоинт производит аутентификацию пользователя
+// @Accept json
 // @Produce json
+// @Param request body User true "JSON тело запроса"
 // @Success 200 {string}  string    "пользователь успешно аутентифицирован"
 // @Failure 400 {string}  string    "неверный формат запроса"
-// @Failure 404 {string}  string    "неверная пара логин/пароль"
+// @Failure 401 {string}  string    "неверная пара логин/пароль"
 // @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/login [post]
 func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.StorageContext, tokenAuth *jwtauth.JWTAuth) {

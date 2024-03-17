@@ -52,10 +52,24 @@ const docTemplate = `{
         "/api/user/login": {
             "post": {
                 "description": "Этот эндпоинт производит аутентификацию пользователя",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "summary": "Аутентификация пользователя",
+                "parameters": [
+                    {
+                        "description": "JSON тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.User"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "пользователь успешно аутентифицирован",
@@ -69,7 +83,7 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
-                    "404": {
+                    "401": {
                         "description": "неверная пара логин/пароль",
                         "schema": {
                             "type": "string"

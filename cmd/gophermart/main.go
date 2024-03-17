@@ -74,7 +74,7 @@ func main() {
 	})
 
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL(fmt.Sprintf("http://%s/swagger/doc.json", cfg.RunAddress)), // API documentation URL
+		httpSwagger.URL(fmt.Sprintf("http://%s/swagger/doc.json", cfg.RunAddress)),
 	))
 
 	if err := http.ListenAndServe(cfg.RunAddress, r); err != nil {

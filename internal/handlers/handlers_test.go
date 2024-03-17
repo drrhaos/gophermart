@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"gophermart/internal/logger"
 	"gophermart/internal/store"
-
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,10 +28,6 @@ type MockDB struct {
 	users map[int]map[string]string
 }
 
-// func (m *MockDB) GetUserByID(id int) map[string]string {
-// 	return m.users[id]
-// }
-
 func (m *MockDB) UserRegister(ctx context.Context, login string, password string) error {
 	for _, user := range m.users {
 		if user["login"] == login {
@@ -43,6 +38,11 @@ func (m *MockDB) UserRegister(ctx context.Context, login string, password string
 }
 
 func (m *MockDB) UserLogin(ctx context.Context, login string, password string) error {
+	for _, user := range m.users {
+		if user["login"] == login && user["password"] != password {
+			return store.ErrLoginDuplicate
+		}
+	}
 	return nil
 }
 
@@ -86,6 +86,12 @@ func TestPostUserRegister(t *testing.T) {
 	r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
 		GetUserBalance(w, r)
 	})
+	r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
+		PostUserBalanceWithdraw(w, r)
+	})
+	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
+		GetUserWithdrawals(w, r)
+	})
 
 	type want struct {
 		code int
@@ -97,10 +103,6 @@ func TestPostUserRegister(t *testing.T) {
 		typeReqest string
 		want       want
 	}{
-		// 200 — пользователь успешно зарегистрирован и аутентифицирован;
-		// 400 — неверный формат запроса;
-		// 409 — логин уже занят;
-		// 500 — внутренняя ошибка сервера.
 		{
 			name: "пользователь успешно зарегистрирован и аутентифицирован",
 			url:  urlPostUserRegister,
@@ -133,16 +135,103 @@ func TestPostUserRegister(t *testing.T) {
 				code: 409,
 			},
 		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			bodyJson, _ := json.Marshal(test.body)
+			req := httptest.NewRequest(test.typeReqest, test.url, bytes.NewReader(bodyJson))
+			w := httptest.NewRecorder()
+
+			r.ServeHTTP(w, req)
+
+			if w.Code != test.want.code {
+				t.Errorf("expected status OK; got %v", w.Code)
+			}
+
+			assert.Equal(t, test.want.code, w.Code)
+		})
+	}
+}
+
+func TestPostUserLogin(t *testing.T) {
+	logger.Init()
+	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
+
+	mockDB := &MockDB{
+		users: map[int]map[string]string{
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC"},
+		},
+	}
+
+	storage := &store.StorageContext{}
+	storage.SetStorage(mockDB)
+
+	r := chi.NewRouter()
+	r.Use(middleware.Compress(5, "application/json", "text/html"))
+
+	r.Post(urlPostUserRegister, func(w http.ResponseWriter, r *http.Request) {
+		PostUserRegister(w, r, storage, tokenAuth)
+	})
+	r.Post(urlPostUserLogin, func(w http.ResponseWriter, r *http.Request) {
+		PostUserLogin(w, r, storage, tokenAuth)
+	})
+	r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
+		PostUserOrders(w, r, storage)
+	})
+	r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
+		GetUserOrders(w, r)
+	})
+	r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
+		GetUserBalance(w, r)
+	})
+	r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
+		PostUserBalanceWithdraw(w, r)
+	})
+	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
+		GetUserWithdrawals(w, r)
+	})
+
+	type want struct {
+		code int
+	}
+	tests := []struct {
+		name       string
+		url        string
+		body       User
+		typeReqest string
+		want       want
+	}{
 		{
-			name: "внутренняя ошибка сервера",
-			url:  urlPostUserRegister,
+			name: "пользователь успешно аутентифицирован",
+			url:  urlPostUserLogin,
 			body: User{
 				Login:    "test",
-				Password: "test",
+				Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
 			},
 			typeReqest: http.MethodPost,
 			want: want{
-				code: 500,
+				code: 200,
+			},
+		},
+		{
+			name:       "неверный формат запроса",
+			url:        urlPostUserLogin,
+			typeReqest: http.MethodPost,
+			want: want{
+				code: 400,
+			},
+		},
+		{
+			name: "неверная пара логин/пароль",
+			url:  urlPostUserLogin,
+			body: User{
+				Login:    "test",
+				Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5CsmJLnPVA5W3y.EfNz7rC",
+			},
+			typeReqest: http.MethodPost,
+			want: want{
+				code: 401,
 			},
 		},
 	}

@@ -35,7 +35,16 @@ paths:
       summary: Запрос на списание средств
   /api/user/login:
     post:
+      consumes:
+      - application/json
       description: Этот эндпоинт производит аутентификацию пользователя
+      parameters:
+      - description: JSON тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.User'
       produces:
       - application/json
       responses:
@@ -47,7 +56,7 @@ paths:
           description: неверный формат запроса
           schema:
             type: string
-        "404":
+        "401":
           description: неверная пара логин/пароль
           schema:
             type: string
