@@ -1,0 +1,123 @@
+definitions:
+  handlers.User:
+    properties:
+      login:
+        description: логин
+        type: string
+      password:
+        description: параметр, принимающий значение gauge или counter
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/user/balance:
+    get:
+      description: Этот эндпоинт для получение текущего баланса пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Получение текущего баланса пользователя
+  /api/user/balance/withdraw:
+    post:
+      description: Этот эндпоинт на списание средств
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Запрос на списание средств
+  /api/user/login:
+    post:
+      description: Этот эндпоинт производит аутентификацию пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: пользователь успешно аутентифицирован
+          schema:
+            type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            type: string
+        "404":
+          description: неверная пара логин/пароль
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Аутентификация пользователя
+  /api/user/orders:
+    get:
+      description: Этот эндпоинт для получения списка загруженных номеров заказов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Получение списка загруженных номеров заказов
+    post:
+      description: Этот эндпоинт загружает номера заказа
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Загрузка номера заказа
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      description: Этот эндпоинт производит регистрацию пользователя
+      parameters:
+      - description: JSON тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: пользователь успешно аутентифицирован
+          schema:
+            type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            type: string
+        "404":
+          description: неверная пара логин/пароль
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Регистрация пользователя
+  /api/user/withdrawals:
+    get:
+      description: Этот эндпоинт для получение информации о выводе средств
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Получение информации о выводе средств
+swagger: "2.0"

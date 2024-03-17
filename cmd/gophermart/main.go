@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 
+	_ "gophermart/docs"
 	"gophermart/internal/configure"
 	"gophermart/internal/handlers"
 	"gophermart/internal/logger"
@@ -14,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 )
 
@@ -69,6 +72,10 @@ func main() {
 	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
 		handlers.GetUserWithdrawals(w, r)
 	})
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL(fmt.Sprintf("http://%s/swagger/doc.json", cfg.RunAddress)), // API documentation URL
+	))
 
 	if err := http.ListenAndServe(cfg.RunAddress, r); err != nil {
 		logger.Logger.Fatal(err.Error())
