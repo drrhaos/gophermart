@@ -52,11 +52,11 @@ func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store
 	}
 
 	err = storage.UserRegister(ctx, user.Login, user.Password)
-	if err != nil && errors.Is(err, store.ErrLoginDuplicate) {
+	if errors.Is(err, store.ErrLoginDuplicate) {
 		res.WriteHeader(http.StatusConflict)
 		return
-	} else if err != nil && errors.Is(err, store.ErrLoginDuplicate) {
-		res.WriteHeader(http.StatusBadRequest)
+	} else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
+		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

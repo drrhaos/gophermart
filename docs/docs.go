@@ -66,7 +66,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -147,7 +147,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -164,8 +164,8 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
-                    "404": {
-                        "description": "неверная пара логин/пароль",
+                    "409": {
+                        "description": "логин уже занят",
                         "schema": {
                             "type": "string"
                         }
@@ -198,7 +198,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handlers.User": {
+        "models.User": {
             "type": "object",
             "properties": {
                 "login": {

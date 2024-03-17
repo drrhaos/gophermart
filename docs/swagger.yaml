@@ -1,5 +1,5 @@
 definitions:
-  handlers.User:
+  models.User:
     properties:
       login:
         description: логин
@@ -44,7 +44,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.User'
+          $ref: '#/definitions/models.User'
       produces:
       - application/json
       responses:
@@ -97,7 +97,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.User'
+          $ref: '#/definitions/models.User'
       produces:
       - application/json
       responses:
@@ -109,8 +109,8 @@ paths:
           description: неверный формат запроса
           schema:
             type: string
-        "404":
-          description: неверная пара логин/пароль
+        "409":
+          description: логин уже занят
           schema:
             type: string
         "500":

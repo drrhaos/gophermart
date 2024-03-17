@@ -55,7 +55,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -136,7 +136,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -153,8 +153,8 @@
                             "type": "string"
                         }
                     },
-                    "404": {
-                        "description": "неверная пара логин/пароль",
+                    "409": {
+                        "description": "логин уже занят",
                         "schema": {
                             "type": "string"
                         }
@@ -187,7 +187,7 @@
         }
     },
     "definitions": {
-        "handlers.User": {
+        "models.User": {
             "type": "object",
             "properties": {
                 "login": {

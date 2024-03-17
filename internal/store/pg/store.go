@@ -2,13 +2,11 @@ package pg
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"gophermart/internal/logger"
 	"gophermart/internal/store"
 
-	"github.com/avast/retry-go"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -33,12 +31,32 @@ func NewDatabase(uri string) *Database {
 		return nil
 	}
 	db := &Database{Conn: conn}
-
+	err = db.Migrations(ctx)
+	if err != nil {
+		logger.Logger.Panic("Не удалось подключиться к базе данных")
+		return nil
+	}
 	return db
 }
 
 func (db *Database) Close() {
 	db.Conn.Close()
+}
+
+func (db *Database) Migrations(ctx context.Context) error {
+
+	_, err := db.Conn.Exec(ctx,
+		`CREATE TABLE IF NOT EXISTS users
+		(
+			"id" SERIAL PRIMARY KEY,
+			login character(40) NOT NULL,
+			password character(64) NOT NULL,
+			date_time timestamp with time zone
+		)`)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db *Database) Ping(ctx context.Context) bool {
@@ -49,29 +67,17 @@ func (db *Database) Ping(ctx context.Context) bool {
 }
 
 func (db *Database) UserRegister(ctx context.Context, login string, password string) error {
-	err := retry.Do(
-		func() error {
-			var countRow int64
-			err := db.Conn.QueryRow(ctx, `SELECT COUNT(login) FROM users WHERE login = $1`, login).Scan(&countRow)
+	var countRow int64
+	err := db.Conn.QueryRow(ctx, `SELECT COUNT(login) FROM users WHERE login = $1`, login).Scan(&countRow)
 
-			if err != nil {
-				logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
-				return err
-			}
-
-			if countRow != 0 {
-				logger.Logger.Warn("Пользователь существует")
-				return store.ErrLoginDuplicate
-			}
-			return nil
-		},
-		retry.Attempts(3),
-		retry.RetryIf(func(err error) bool {
-			return !errors.Is(err, store.ErrLoginDuplicate)
-		}),
-	)
 	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
 		return err
+	}
+
+	if countRow != 0 {
+		logger.Logger.Warn("Пользователь существует")
+		return store.ErrLoginDuplicate
 	}
 
 	var hashedPassword []byte
@@ -81,44 +87,23 @@ func (db *Database) UserRegister(ctx context.Context, login string, password str
 		return err
 	}
 
-	err = retry.Do(
-		func() error {
-			_, err := db.Conn.Exec(ctx,
-				`INSERT INTO users (login, password, date_time) VALUES ($1, $2, $3)`, login, string(hashedPassword), time.Now())
-			if err != nil {
-				logger.Logger.Warn("Не удалось добавить пользователя ", zap.Error(err))
-				return err
-			}
-			logger.Logger.Info("Добавлен новый пользователь")
-			return nil
-		},
-		retry.Attempts(3),
-	)
-
+	_, err = db.Conn.Exec(ctx,
+		`INSERT INTO users (login, password, date_time) VALUES ($1, $2, $3)`, login, string(hashedPassword), time.Now())
 	if err != nil {
+		logger.Logger.Warn("Не удалось добавить пользователя ", zap.Error(err))
 		return err
 	}
+	logger.Logger.Info("Добавлен новый пользователь")
 	return nil
 }
 
 func (db *Database) UserLogin(ctx context.Context, login string, password string) error {
 	var hashedPassword []byte
-	err := retry.Do(
-		func() error {
-			err := db.Conn.QueryRow(ctx, `SELECT password FROM users WHERE login = $1`, login).Scan(&hashedPassword)
 
-			if err != nil {
-				logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
-				return err
-			}
-			return nil
-		},
-		retry.Attempts(3),
-		retry.RetryIf(func(err error) bool {
-			return !errors.Is(err, store.ErrAuthentication)
-		}),
-	)
+	err := db.Conn.QueryRow(ctx, `SELECT password FROM users WHERE login = $1`, login).Scan(&hashedPassword)
+
 	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
 		return err
 	}
 
