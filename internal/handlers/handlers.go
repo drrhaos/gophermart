@@ -156,7 +156,6 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
-	// 17893729974
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
@@ -175,6 +174,10 @@ func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.S
 	if errors.Is(err, store.ErrDuplicateOrder) {
 		res.WriteHeader(http.StatusOK)
 		return
+	} else if err != nil && errors.Is(err, store.ErrDuplicateOrderOtherUser) {
+		res.WriteHeader(http.StatusConflict)
+		return
+
 	} else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return

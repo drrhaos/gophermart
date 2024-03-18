@@ -132,9 +132,27 @@ func (db *Database) UserLogin(ctx context.Context, login string, password string
 	return nil
 }
 
-func (db *Database) UploadUserOrders(ctx context.Context, user string, order int) error {
-	_, err := db.Conn.Exec(ctx,
-		`INSERT INTO orders (number, user_id) VALUES ($1,  (SELECT id FROM users WHERE login = $2))`, order, user)
+func (db *Database) UploadUserOrders(ctx context.Context, login string, order int) error {
+	var idUser int
+	err := db.Conn.QueryRow(ctx, `SELECT id FROM users WHERE login = $1`, login).Scan(&idUser)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return err
+	}
+
+	var idUserOrder int
+	err = db.Conn.QueryRow(ctx, `SELECT user_id FROM orders WHERE number = $1`, order).Scan(&idUserOrder)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return err
+	}
+
+	if idUser != idUserOrder {
+		return store.ErrDuplicateOrderOtherUser
+	}
+
+	_, err = db.Conn.Exec(ctx,
+		`INSERT INTO orders (number, user_id) VALUES ($1, $2)`, order, idUser)
 
 	var duplicateEntryError = &pgconn.PgError{Code: "23505"}
 	if err != nil {

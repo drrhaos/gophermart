@@ -6,9 +6,9 @@ import (
 )
 
 type StorageInterface interface {
-	UserRegister(ctx context.Context, user string, password string) error
-	UserLogin(ctx context.Context, user string, password string) error
-	UploadUserOrders(ctx context.Context, user string, order int) error
+	UserRegister(ctx context.Context, login string, password string) error
+	UserLogin(ctx context.Context, login string, password string) error
+	UploadUserOrders(ctx context.Context, login string, order int) error
 	Ping(ctx context.Context) bool
 }
 
@@ -19,6 +19,7 @@ type StorageContext struct {
 var ErrLoginDuplicate = errors.New("user duplicate")
 var ErrAuthentication = errors.New("invalid user name or password")
 var ErrDuplicateOrder = errors.New("duplicate order")
+var ErrDuplicateOrderOtherUser = errors.New("duplicate order other user")
 
 func (sc *StorageContext) SetStorage(storage StorageInterface) {
 	sc.storage = storage
