@@ -2,11 +2,13 @@ package pg
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gophermart/internal/logger"
 	"gophermart/internal/store"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -33,7 +35,7 @@ func NewDatabase(uri string) *Database {
 	db := &Database{Conn: conn}
 	err = db.Migrations(ctx)
 	if err != nil {
-		logger.Logger.Panic("Не удалось подключиться к базе данных")
+		logger.Logger.Panic("Не удалось подключиться к базе данных", zap.Error(err))
 		return nil
 	}
 	return db
@@ -48,14 +50,30 @@ func (db *Database) Migrations(ctx context.Context) error {
 	_, err := db.Conn.Exec(ctx,
 		`CREATE TABLE IF NOT EXISTS users
 		(
-			"id" SERIAL PRIMARY KEY,
+			id SERIAL PRIMARY KEY,
 			login character(40) NOT NULL,
 			password character(64) NOT NULL,
-			date_time timestamp with time zone
+			sum bigint DEFAULT 0,
+			registered_at timestamp with time zone,
+			last_time timestamp with time zone
 		)`)
 	if err != nil {
 		return err
 	}
+
+	_, err = db.Conn.Exec(ctx,
+		`CREATE TABLE IF NOT EXISTS orders
+		(
+			number bigint UNIQUE PRIMARY KEY,
+			user_id bigint REFERENCES users(id),
+			status character(10) DEFAULT 'NEW', 
+			accrual bigint,
+			uploaded_at timestamp with time zone
+		)`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -88,7 +106,7 @@ func (db *Database) UserRegister(ctx context.Context, login string, password str
 	}
 
 	_, err = db.Conn.Exec(ctx,
-		`INSERT INTO users (login, password, date_time) VALUES ($1, $2, $3)`, login, string(hashedPassword), time.Now())
+		`INSERT INTO users (login, password, registered_at) VALUES ($1, $2, $3)`, login, string(hashedPassword), time.Now())
 	if err != nil {
 		logger.Logger.Warn("Не удалось добавить пользователя ", zap.Error(err))
 		return err
@@ -109,12 +127,25 @@ func (db *Database) UserLogin(ctx context.Context, login string, password string
 
 	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
 	if err != nil {
-		return err
+		return store.ErrAuthentication
 	}
 	return nil
 }
 
-func (db *Database) UserOrders(ctx context.Context, order int) bool {
+func (db *Database) UploadUserOrders(ctx context.Context, user string, order int) error {
+	_, err := db.Conn.Exec(ctx,
+		`INSERT INTO orders (number, user_id) VALUES ($1,  (SELECT id FROM users WHERE login = $2))`, order, user)
 
-	return true
+	var duplicateEntryError = &pgconn.PgError{Code: "23505"}
+	if err != nil {
+		if errors.As(err, &duplicateEntryError) {
+			logger.Logger.Warn("Дубликат заказа")
+			return store.ErrDuplicateOrder
+		} else {
+			logger.Logger.Warn("Не удалось добавить пользователя ", zap.Error(err))
+			return err
+		}
+	}
+	logger.Logger.Info("Добавлен новый заказ")
+	return nil
 }

@@ -105,13 +105,63 @@
             },
             "post": {
                 "description": "Этот эндпоинт загружает номера заказа",
+                "consumes": [
+                    "text/plain"
+                ],
                 "produces": [
-                    "application/json"
+                    "text/plain"
                 ],
                 "summary": "Загрузка номера заказа",
+                "parameters": [
+                    {
+                        "description": "номер заказа",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "номер заказа уже был загружен этим пользователем",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "202": {
+                        "description": "новый номер заказа принят в обработку",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "неверный формат запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не аутентифицирован",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "номер заказа уже был загружен другим пользователем",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "неверный формат номера заказа",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
                         "schema": {
                             "type": "string"
                         }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"gophermart/internal/logger"
+	"gophermart/internal/luhn"
 	"gophermart/internal/models"
 	"gophermart/internal/store"
 	"io"
@@ -112,9 +113,12 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 	}
 
 	err = storage.UserLogin(ctx, user.Login, user.Password)
-	if err != nil {
-		logger.Logger.Warn("Пользователь не прошел проверку")
+
+	if errors.Is(err, store.ErrAuthentication) {
 		res.WriteHeader(http.StatusUnauthorized)
+		return
+	} else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
+		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -138,49 +142,45 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 // PostUserOrders Загрузка номера заказа
 // @Summary Загрузка номера заказа
 // @Description Этот эндпоинт загружает номера заказа
-// @Produce json
-// @Success 200 {string} {string}  string    ""
+// @Accept plain
+// @Produce plain
+// @Param  request   body      int  true  "номер заказа"
+// @Success 200 {string}  string    "номер заказа уже был загружен этим пользователем"
+// @Failure 202 {string}  string    "новый номер заказа принят в обработку"
+// @Failure 400 {string}  string    "неверный формат запроса"
+// @Failure 401 {string}  string    "пользователь не аутентифицирован"
+// @Failure 409 {string}  string    "номер заказа уже был загружен другим пользователем"
+// @Failure 422 {string}  string    "неверный формат номера заказа"
+// @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/orders [post]
 func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
-	// 200 — номер заказа уже был загружен этим пользователем;
-	// 202 — новый номер заказа принят в обработку;
-	// 400 — неверный формат запроса;
-	// 401 — пользователь не аутентифицирован;
-	// 409 — номер заказа уже был загружен другим пользователем;
-	// 422 — неверный формат номера заказа;
-	// 500 — внутренняя ошибка сервера.
-	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Microsecond)
+	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
-
-	var buf bytes.Buffer
-
-	_, err := buf.ReadFrom(req.Body)
+	// 17893729974
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	order, err := strconv.Atoi(string(body))
 
-	bodyBytes, err := io.ReadAll(req.Body)
-	if err != nil {
-		res.WriteHeader(http.StatusBadRequest)
+	if err != nil || !luhn.Valid(order) {
+		logger.Logger.Info("Номер заказа не прошел проверку")
+		res.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	user := "test"
+	err = storage.UploadUserOrders(ctx, user, order)
+
+	if errors.Is(err, store.ErrDuplicateOrder) {
+		res.WriteHeader(http.StatusOK)
+		return
+	} else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
+		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	bodyString := string(bodyBytes)
-
-	order, err := strconv.Atoi(bodyString)
-	if err != nil {
-		res.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	exist := storage.UserOrders(ctx, order)
-	if exist {
-		res.WriteHeader(http.StatusConflict)
-		return
-	}
-
-	res.WriteHeader(http.StatusOK)
+	res.WriteHeader(http.StatusAccepted)
 }
 
 // GetUserOrders Получение списка загруженных номеров заказов
