@@ -3,7 +3,6 @@ module gophermart
 go 1.21.0
 
 require (
-	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi/v5 v5.0.12

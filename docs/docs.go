@@ -55,9 +55,6 @@ const docTemplate = `{
                 "consumes": [
                     "application/json"
                 ],
-                "produces": [
-                    "application/json"
-                ],
                 "summary": "Аутентификация пользователя",
                 "parameters": [
                     {
@@ -107,7 +104,25 @@ const docTemplate = `{
                 "summary": "Получение списка загруженных номеров заказов",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "204": {
+                        "description": "нет данных для ответа.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
                         "schema": {
                             "type": "string"
                         }
@@ -117,9 +132,6 @@ const docTemplate = `{
             "post": {
                 "description": "Этот эндпоинт загружает номера заказа",
                 "consumes": [
-                    "text/plain"
-                ],
-                "produces": [
                     "text/plain"
                 ],
                 "summary": "Загрузка номера заказа",
@@ -184,9 +196,6 @@ const docTemplate = `{
             "post": {
                 "description": "Этот эндпоинт производит регистрацию пользователя",
                 "consumes": [
-                    "application/json"
-                ],
-                "produces": [
                     "application/json"
                 ],
                 "summary": "Регистрация пользователя",

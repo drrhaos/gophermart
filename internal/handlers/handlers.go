@@ -22,7 +22,6 @@ import (
 // @Summary Регистрация пользователя
 // @Description Этот эндпоинт производит регистрацию пользователя
 // @Accept json
-// @Produce json
 // @Param request body models.User true "JSON тело запроса"
 // @Success 200 {string}  string    "пользователь успешно аутентифицирован"
 // @Failure 400 {string}  string    "неверный формат запроса"
@@ -82,7 +81,6 @@ func PostUserRegister(res http.ResponseWriter, req *http.Request, storage *store
 // @Summary Аутентификация пользователя
 // @Description Этот эндпоинт производит аутентификацию пользователя
 // @Accept json
-// @Produce json
 // @Param request body models.User true "JSON тело запроса"
 // @Success 200 {string}  string    "пользователь успешно аутентифицирован"
 // @Failure 400 {string}  string    "неверный формат запроса"
@@ -143,7 +141,6 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 // @Summary Загрузка номера заказа
 // @Description Этот эндпоинт загружает номера заказа
 // @Accept plain
-// @Produce plain
 // @Param  request   body      int  true  "номер заказа"
 // @Success 200 {string}  string    "номер заказа уже был загружен этим пользователем"
 // @Failure 202 {string}  string    "новый номер заказа принят в обработку"
@@ -189,14 +186,32 @@ func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.S
 // GetUserOrders Получение списка загруженных номеров заказов
 // @Summary Получение списка загруженных номеров заказов
 // @Description Этот эндпоинт для получения списка загруженных номеров заказов
-// @Produce json
-// @Success 200 {string}  string    ""
+// @Produce      json
+// @Success 200 {string}  string    "успешная обработка запроса"
+// @Failure 204 {string}  string    "нет данных для ответа."
+// @Failure 401 {string}  string    "пользователь не авторизован"
+// @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/orders [get]
-func GetUserOrders(res http.ResponseWriter, req *http.Request) {
-	// 200 — успешная обработка запроса.
-	// 204 — нет данных для ответа.
-	// 401 — пользователь не авторизован.
-	// 500 — внутренняя ошибка сервера.
+func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
+	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
+	defer cancel()
+	user := "test"
+	ordersUser, err := storage.GetUserOrders(ctx, user)
+
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	jsonBytes, err := json.Marshal(ordersUser)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+	}
+
+	_, err = res.Write(jsonBytes)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+	}
 
 	res.WriteHeader(http.StatusOK)
 }

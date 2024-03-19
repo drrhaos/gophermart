@@ -2,12 +2,15 @@ package pg
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
 	"gophermart/internal/logger"
+	"gophermart/internal/models"
 	"gophermart/internal/store"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -51,8 +54,8 @@ func (db *Database) Migrations(ctx context.Context) error {
 		`CREATE TABLE IF NOT EXISTS users
 		(
 			id SERIAL PRIMARY KEY,
-			login character(40) NOT NULL,
-			password character(64) NOT NULL,
+			login varchar(40) NOT NULL,
+			password varchar(64) NOT NULL,
 			sum bigint DEFAULT 0,
 			registered_at timestamp with time zone,
 			last_time timestamp with time zone
@@ -66,7 +69,7 @@ func (db *Database) Migrations(ctx context.Context) error {
 		(
 			number bigint UNIQUE PRIMARY KEY,
 			user_id bigint REFERENCES users(id),
-			status character(10) DEFAULT 'NEW', 
+			status varchar(10) DEFAULT 'NEW', 
 			accrual bigint,
 			uploaded_at timestamp with time zone
 		)`)
@@ -135,24 +138,26 @@ func (db *Database) UserLogin(ctx context.Context, login string, password string
 func (db *Database) UploadUserOrders(ctx context.Context, login string, order int) error {
 	var idUser int
 	err := db.Conn.QueryRow(ctx, `SELECT id FROM users WHERE login = $1`, login).Scan(&idUser)
-	if err != nil {
-		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+	if err != nil && err != pgx.ErrNoRows {
+		logger.Logger.Warn("Ошибка выполнения запроса id", zap.Error(err))
 		return err
 	}
 
-	var idUserOrder int
-	err = db.Conn.QueryRow(ctx, `SELECT user_id FROM orders WHERE number = $1`, order).Scan(&idUserOrder)
-	if err != nil {
-		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+	var countUser int
+	err = db.Conn.QueryRow(ctx, `SELECT COUNT(user_id) FROM orders WHERE number = $1 AND user_id <> $2`, order, idUser).Scan(&countUser)
+
+	if err != nil && err != pgx.ErrNoRows {
+		logger.Logger.Warn("Ошибка выполнения запроса user id", zap.Error(err))
 		return err
 	}
 
-	if idUser != idUserOrder {
+	if countUser > 0 {
+		logger.Logger.Warn("Этот заказ добавлен для другого пользователя")
 		return store.ErrDuplicateOrderOtherUser
 	}
 
 	_, err = db.Conn.Exec(ctx,
-		`INSERT INTO orders (number, user_id) VALUES ($1, $2)`, order, idUser)
+		`INSERT INTO orders (number, user_id, uploaded_at) VALUES ($1, $2, $3)`, order, idUser, time.Now())
 
 	var duplicateEntryError = &pgconn.PgError{Code: "23505"}
 	if err != nil {
@@ -166,4 +171,31 @@ func (db *Database) UploadUserOrders(ctx context.Context, login string, order in
 	}
 	logger.Logger.Info("Добавлен новый заказ")
 	return nil
+}
+
+func (db *Database) GetUserOrders(ctx context.Context, login string) ([]models.StatusOrders, error) {
+	var orderUser models.StatusOrders
+	var ordersUser []models.StatusOrders
+	rows, err := db.Conn.Query(ctx, `SELECT number,status,accrual,uploaded_at FROM orders WHERE user_id = (SELECT id FROM users WHERE login = $1) ORDER BY uploaded_at`, login)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return ordersUser, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var accural sql.NullInt64
+		err = rows.Scan(&orderUser.Number, &orderUser.Status, &accural, &orderUser.UploadedAt)
+		if err != nil {
+			logger.Logger.Warn("Ошибка при сканировании строки:", zap.Error(err))
+			return ordersUser, err
+		}
+		if accural.Valid {
+			orderUser.Accrual = accural.Int64
+		}
+		ordersUser = append(ordersUser, orderUser)
+	}
+
+	return ordersUser, nil
 }

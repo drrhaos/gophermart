@@ -53,7 +53,7 @@ func TestPostUserRegister(t *testing.T) {
 		PostUserOrders(w, r, storage)
 	})
 	r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
-		GetUserOrders(w, r)
+		GetUserOrders(w, r, storage)
 	})
 	r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
 		GetUserBalance(w, r)
@@ -152,7 +152,7 @@ func TestPostUserLogin(t *testing.T) {
 		PostUserOrders(w, r, storage)
 	})
 	r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
-		GetUserOrders(w, r)
+		GetUserOrders(w, r, storage)
 	})
 	r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
 		GetUserBalance(w, r)
@@ -259,7 +259,7 @@ func TestPostUserOrders(t *testing.T) {
 			PostUserOrders(w, r, storage)
 		})
 		r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
-			GetUserOrders(w, r)
+			GetUserOrders(w, r, storage)
 		})
 		r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
 			GetUserBalance(w, r)

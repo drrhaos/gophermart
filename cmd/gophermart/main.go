@@ -57,20 +57,25 @@ func main() {
 	r.Post(urlPostUserLogin, func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostUserLogin(w, r, storage, tokenAuth)
 	})
-	r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostUserOrders(w, r, storage)
-	})
-	r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetUserOrders(w, r)
-	})
-	r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetUserBalance(w, r)
-	})
-	r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostUserBalanceWithdraw(w, r)
-	})
-	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetUserWithdrawals(w, r)
+	r.Group(func(r chi.Router) {
+		// r.Use(jwtauth.Verifier(tokenAuth))
+		// r.Use(jwtauth.Authenticator)
+
+		r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
+			handlers.PostUserOrders(w, r, storage)
+		})
+		r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
+			handlers.GetUserOrders(w, r, storage)
+		})
+		r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
+			handlers.GetUserBalance(w, r)
+		})
+		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
+			handlers.PostUserBalanceWithdraw(w, r)
+		})
+		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
+			handlers.GetUserWithdrawals(w, r)
+		})
 	})
 
 	r.Get("/swagger/*", httpSwagger.Handler(

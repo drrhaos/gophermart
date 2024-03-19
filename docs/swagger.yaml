@@ -45,8 +45,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.User'
-      produces:
-      - application/json
       responses:
         "200":
           description: пользователь успешно аутентифицирован
@@ -72,7 +70,19 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: успешная обработка запроса
+          schema:
+            type: string
+        "204":
+          description: нет данных для ответа.
+          schema:
+            type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
           schema:
             type: string
       summary: Получение списка загруженных номеров заказов
@@ -87,8 +97,6 @@ paths:
         required: true
         schema:
           type: integer
-      produces:
-      - text/plain
       responses:
         "200":
           description: номер заказа уже был загружен этим пользователем
@@ -131,8 +139,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.User'
-      produces:
-      - application/json
       responses:
         "200":
           description: пользователь успешно аутентифицирован

@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"gophermart/internal/models"
 	"gophermart/internal/store"
 	"strconv"
 )
@@ -45,6 +46,10 @@ func (m *MockDB) UploadUserOrders(ctx context.Context, login string, order int) 
 	}
 
 	return nil
+}
+
+func (m *MockDB) GetUserOrders(ctx context.Context, login string) ([]models.StatusOrders, error) {
+	return nil, nil
 }
 
 func (m *MockDB) Ping(ctx context.Context) (exists bool) {
