@@ -5,6 +5,7 @@ import (
 	"gophermart/internal/models"
 	"gophermart/internal/store"
 	"strconv"
+	"time"
 )
 
 type MockDB struct {
@@ -49,7 +50,28 @@ func (m *MockDB) UploadUserOrders(ctx context.Context, login string, order int) 
 }
 
 func (m *MockDB) GetUserOrders(ctx context.Context, login string) ([]models.StatusOrders, error) {
-	return nil, nil
+	idUser := "-1"
+	var orderUser models.StatusOrders
+	var ordersUser []models.StatusOrders
+	var accrual string
+	for _, user := range m.Users {
+		if user["login"] == login {
+			idUser = user["id"]
+		}
+	}
+	for _, orderRow := range m.Orders {
+		if orderRow["user_id"] == idUser {
+			orderUser.Number = orderRow["number"]
+			orderUser.Status = orderRow["status"]
+			accrual = orderRow["accrual"]
+			if accrual != "" {
+				orderUser.Accrual, _ = strconv.ParseInt(accrual, 10, 64)
+			}
+			orderUser.UploadedAt, _ = time.Parse("2006-01-02T15:04:05Z", orderRow["uploaded_at"])
+			ordersUser = append(ordersUser, orderUser)
+		}
+	}
+	return ordersUser, nil
 }
 
 func (m *MockDB) Ping(ctx context.Context) (exists bool) {

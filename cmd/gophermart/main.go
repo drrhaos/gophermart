@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -32,6 +31,10 @@ var cfg configure.Config
 
 var tokenAuth *jwtauth.JWTAuth
 
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 
 	logger.Init()
@@ -51,6 +54,7 @@ func main() {
 
 	logger.Logger.Info("Сервер запущен", zap.String("адрес", cfg.RunAddress))
 
+	r.Mount("/swagger", httpSwagger.Handler())
 	r.Post(urlPostUserRegister, func(w http.ResponseWriter, r *http.Request) {
 		handlers.PostUserRegister(w, r, storage, tokenAuth)
 	})
@@ -58,8 +62,8 @@ func main() {
 		handlers.PostUserLogin(w, r, storage, tokenAuth)
 	})
 	r.Group(func(r chi.Router) {
-		// r.Use(jwtauth.Verifier(tokenAuth))
-		// r.Use(jwtauth.Authenticator)
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
 
 		r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
 			handlers.PostUserOrders(w, r, storage)
@@ -77,10 +81,6 @@ func main() {
 			handlers.GetUserWithdrawals(w, r)
 		})
 	})
-
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL(fmt.Sprintf("http://%s/swagger/doc.json", cfg.RunAddress)),
-	))
 
 	if err := http.ListenAndServe(cfg.RunAddress, r); err != nil {
 		logger.Logger.Fatal(err.Error())

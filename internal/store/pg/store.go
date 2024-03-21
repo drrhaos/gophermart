@@ -176,7 +176,7 @@ func (db *Database) UploadUserOrders(ctx context.Context, login string, order in
 func (db *Database) GetUserOrders(ctx context.Context, login string) ([]models.StatusOrders, error) {
 	var orderUser models.StatusOrders
 	var ordersUser []models.StatusOrders
-	rows, err := db.Conn.Query(ctx, `SELECT number,status,accrual,uploaded_at FROM orders WHERE user_id = (SELECT id FROM users WHERE login = $1) ORDER BY uploaded_at`, login)
+	rows, err := db.Conn.Query(ctx, `SELECT number,status,accrual,uploaded_at FROM orders WHERE user_id = (SELECT id FROM users WHERE login = $1) ORDER BY uploaded_at DESC`, login)
 	if err != nil {
 		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
 		return ordersUser, err

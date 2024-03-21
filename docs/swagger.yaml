@@ -85,6 +85,8 @@ paths:
           description: внутренняя ошибка сервера
           schema:
             type: string
+      security:
+      - Bearer: []
       summary: Получение списка загруженных номеров заказов
     post:
       consumes:
@@ -126,6 +128,8 @@ paths:
           description: внутренняя ошибка сервера
           schema:
             type: string
+      security:
+      - Bearer: []
       summary: Загрузка номера заказа
   /api/user/register:
     post:
@@ -168,4 +172,10 @@ paths:
           schema:
             type: string
       summary: Получение информации о выводе средств
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -150,6 +150,7 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 // @Failure 422 {string}  string    "неверный формат номера заказа"
 // @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/orders [post]
+// @Security Bearer
 func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
@@ -192,10 +193,18 @@ func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.S
 // @Failure 401 {string}  string    "пользователь не авторизован"
 // @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/orders [get]
+// @Security Bearer
 func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
-	user := "test"
+	token, _, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	claims := token.PrivateClaims()
+	user := claims["username"].(string)
+
 	ordersUser, err := storage.GetUserOrders(ctx, user)
 
 	if err != nil {
@@ -203,14 +212,21 @@ func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.St
 		return
 	}
 
+	if len(ordersUser) == 0 {
+		res.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	jsonBytes, err := json.Marshal(ordersUser)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	_, err = res.Write(jsonBytes)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	res.WriteHeader(http.StatusOK)

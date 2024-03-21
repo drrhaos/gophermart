@@ -97,6 +97,11 @@ const docTemplate = `{
         },
         "/api/user/orders": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Этот эндпоинт для получения списка загруженных номеров заказов",
                 "produces": [
                     "application/json"
@@ -130,6 +135,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Этот эндпоинт загружает номера заказа",
                 "consumes": [
                     "text/plain"
@@ -269,6 +279,14 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
