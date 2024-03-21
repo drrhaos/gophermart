@@ -154,6 +154,15 @@ func PostUserLogin(res http.ResponseWriter, req *http.Request, storage *store.St
 func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
+
+	token, _, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	claims := token.PrivateClaims()
+	user := claims["username"].(string)
+
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
@@ -166,7 +175,7 @@ func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.S
 		res.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
-	user := "test"
+
 	err = storage.UploadUserOrders(ctx, user, order)
 
 	if errors.Is(err, store.ErrDuplicateOrder) {
