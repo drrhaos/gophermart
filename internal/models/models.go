@@ -12,7 +12,7 @@ type User struct {
 type StatusOrders struct {
 	Number     string    `json:"number" db:"number"`                       // номер заказа
 	Status     string    `json:"status" db:"status"`                       // статус расчёта начисления
-	Accrual    int64     `json:"accrual,omitempty" db:"accrual,omitempty"` // рассчитанные баллы к начислению, при отсутствии начисления — поле отсутствует в ответе.
+	Accrual    float64   `json:"accrual,omitempty" db:"accrual,omitempty"` // рассчитанные баллы к начислению, при отсутствии начисления — поле отсутствует в ответе.
 	UploadedAt time.Time `json:"uploaded_at" db:"uploaded_at"`             // временЯ загрузки, формат даты — RFC3339.
 }
 

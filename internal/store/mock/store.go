@@ -65,13 +65,25 @@ func (m *MockDB) GetUserOrders(ctx context.Context, login string) ([]models.Stat
 			orderUser.Status = orderRow["status"]
 			accrual = orderRow["accrual"]
 			if accrual != "" {
-				orderUser.Accrual, _ = strconv.ParseInt(accrual, 10, 64)
+				orderUser.Accrual, _ = strconv.ParseFloat(accrual, 64)
 			}
 			orderUser.UploadedAt, _ = time.Parse("2006-01-02T15:04:05Z", orderRow["uploaded_at"])
 			ordersUser = append(ordersUser, orderUser)
 		}
 	}
 	return ordersUser, nil
+}
+
+func (m *MockDB) GetUserBalance(ctx context.Context, login string) (models.Balance, error) {
+	var userBalance models.Balance
+
+	for _, user := range m.Users {
+		if user["login"] == login {
+			userBalance.Current, _ = strconv.ParseFloat(user["sum"], 64)
+			userBalance.Withdrawn, _ = strconv.ParseFloat(user["withdrawn"], 64)
+		}
+	}
+	return userBalance, nil
 }
 
 func (m *MockDB) Ping(ctx context.Context) (exists bool) {

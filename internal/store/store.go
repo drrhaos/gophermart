@@ -11,6 +11,7 @@ type StorageInterface interface {
 	UserLogin(ctx context.Context, login string, password string) error
 	UploadUserOrders(ctx context.Context, login string, order int) error
 	GetUserOrders(ctx context.Context, login string) ([]models.StatusOrders, error)
+	GetUserBalance(ctx context.Context, login string) (models.Balance, error)
 	Ping(ctx context.Context) bool
 }
 
@@ -41,6 +42,10 @@ func (sc *StorageContext) UploadUserOrders(ctx context.Context, login string, or
 
 func (sc *StorageContext) GetUserOrders(ctx context.Context, login string) ([]models.StatusOrders, error) {
 	return sc.storage.GetUserOrders(ctx, login)
+}
+
+func (sc *StorageContext) GetUserBalance(ctx context.Context, login string) (models.Balance, error) {
+	return sc.storage.GetUserBalance(ctx, login)
 }
 
 func (sc *StorageContext) Ping(ctx context.Context) (exists bool) {

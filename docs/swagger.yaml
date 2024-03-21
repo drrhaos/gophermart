@@ -18,9 +18,19 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: успешная обработка запроса
           schema:
             type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
       summary: Получение текущего баланса пользователя
   /api/user/balance/withdraw:
     post:

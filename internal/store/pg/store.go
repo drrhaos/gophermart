@@ -56,7 +56,8 @@ func (db *Database) Migrations(ctx context.Context) error {
 			id SERIAL PRIMARY KEY,
 			login varchar(40) NOT NULL,
 			password varchar(64) NOT NULL,
-			sum bigint DEFAULT 0,
+			sum float DEFAULT 0,
+			withdrawn float DEFAULT 0,
 			registered_at timestamp with time zone,
 			last_time timestamp with time zone
 		)`)
@@ -70,7 +71,7 @@ func (db *Database) Migrations(ctx context.Context) error {
 			number bigint UNIQUE PRIMARY KEY,
 			user_id bigint REFERENCES users(id),
 			status varchar(10) DEFAULT 'NEW', 
-			accrual bigint,
+			accrual float,
 			uploaded_at timestamp with time zone
 		)`)
 	if err != nil {
@@ -123,7 +124,9 @@ func (db *Database) UserLogin(ctx context.Context, login string, password string
 
 	err := db.Conn.QueryRow(ctx, `SELECT password FROM users WHERE login = $1`, login).Scan(&hashedPassword)
 
-	if err != nil {
+	if err == pgx.ErrNoRows {
+		return store.ErrAuthentication
+	} else if err != nil {
 		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
 		return err
 	}
@@ -185,17 +188,27 @@ func (db *Database) GetUserOrders(ctx context.Context, login string) ([]models.S
 	defer rows.Close()
 
 	for rows.Next() {
-		var accural sql.NullInt64
+		var accural sql.NullFloat64
 		err = rows.Scan(&orderUser.Number, &orderUser.Status, &accural, &orderUser.UploadedAt)
 		if err != nil {
 			logger.Logger.Warn("Ошибка при сканировании строки:", zap.Error(err))
 			return ordersUser, err
 		}
 		if accural.Valid {
-			orderUser.Accrual = accural.Int64
+			orderUser.Accrual = accural.Float64
 		}
 		ordersUser = append(ordersUser, orderUser)
 	}
 
 	return ordersUser, nil
+}
+
+func (db *Database) GetUserBalance(ctx context.Context, login string) (models.Balance, error) {
+	var userBalance models.Balance
+	err := db.Conn.QueryRow(ctx, `SELECT sum,withdrawn FROM users WHERE login = $1`, login).Scan(&userBalance.Current, &userBalance.Withdrawn)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return userBalance, err
+	}
+	return userBalance, nil
 }

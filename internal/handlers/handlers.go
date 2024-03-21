@@ -244,13 +244,41 @@ func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.St
 // GetUserBalance Получение текущего баланса пользователя
 // @Summary Получение текущего баланса пользователя
 // @Description Этот эндпоинт для получение текущего баланса пользователя
-// @Produce json
-// @Success 200 {string} string    ""
+// @Produce      json
+// @Success 200 {string}  string    "успешная обработка запроса"
+// @Failure 401 {string}  string    "пользователь не авторизован"
+// @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/balance [get]
-func GetUserBalance(res http.ResponseWriter, req *http.Request) {
-	// 200 — успешная обработка запроса.
-	// 401 — пользователь не авторизован.
-	// 500 — внутренняя ошибка сервера.
+// @Security Bearer
+func GetUserBalance(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
+	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
+	defer cancel()
+	token, _, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	claims := token.PrivateClaims()
+	user := claims["username"].(string)
+
+	ordersUser, err := storage.GetUserBalance(ctx, user)
+
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	jsonBytes, err := json.Marshal(ordersUser)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = res.Write(jsonBytes)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	res.WriteHeader(http.StatusOK)
 }

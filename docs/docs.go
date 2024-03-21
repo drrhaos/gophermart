@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/api/user/balance": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Этот эндпоинт для получение текущего баланса пользователя",
                 "produces": [
                     "application/json"
@@ -24,7 +29,19 @@ const docTemplate = `{
                 "summary": "Получение текущего баланса пользователя",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
                         "schema": {
                             "type": "string"
                         }

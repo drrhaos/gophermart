@@ -72,7 +72,7 @@ func main() {
 			handlers.GetUserOrders(w, r, storage)
 		})
 		r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
-			handlers.GetUserBalance(w, r)
+			handlers.GetUserBalance(w, r, storage)
 		})
 		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
 			handlers.PostUserBalanceWithdraw(w, r)
