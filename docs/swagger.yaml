@@ -20,9 +20,9 @@ info:
 paths:
   /api/user/balance:
     get:
-      consumes:
-      - application/json
       description: Этот эндпоинт для получение текущего баланса пользователя
+      produces:
+      - application/json
       responses:
         "200":
           description: успешная обработка запроса

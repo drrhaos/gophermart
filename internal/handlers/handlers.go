@@ -325,14 +325,14 @@ func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request, storage
 		return
 	}
 
-	// err = storage.UserRegister(ctx, user.Login, user.Password)
-	// if errors.Is(err, store.ErrLoginDuplicate) {
-	// 	res.WriteHeader(http.StatusConflict)
-	// 	return
-	// } else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
-	// 	res.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
+	err = storage.UpdateUserBalanceWithdraw(ctx, user, userBalance.Order, userBalance.Sum)
+	if errors.Is(err, store.ErrLoginDuplicate) {
+		res.WriteHeader(http.StatusConflict)
+		return
+	} else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	res.WriteHeader(http.StatusOK)
 }
 

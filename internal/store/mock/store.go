@@ -89,3 +89,7 @@ func (m *MockDB) GetUserBalance(ctx context.Context, login string) (models.Balan
 func (m *MockDB) Ping(ctx context.Context) (exists bool) {
 	return true
 }
+
+func (m *MockDB) UpdateUserBalanceWithdraw(ctx context.Context, login string, order string, sum float64) error {
+	return nil
+}

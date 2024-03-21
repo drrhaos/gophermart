@@ -212,3 +212,7 @@ func (db *Database) GetUserBalance(ctx context.Context, login string) (models.Ba
 	}
 	return userBalance, nil
 }
+
+func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string, order string, sum float64) error {
+	return nil
+}

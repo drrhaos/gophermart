@@ -23,7 +23,7 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Этот эндпоинт для получение текущего баланса пользователя",
-                "consumes": [
+                "produces": [
                     "application/json"
                 ],
                 "summary": "Получение текущего баланса пользователя",
