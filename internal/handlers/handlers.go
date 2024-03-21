@@ -286,16 +286,53 @@ func GetUserBalance(res http.ResponseWriter, req *http.Request, storage *store.S
 // PostUserBalanceWithdraw Запрос на списание средств
 // @Summary Запрос на списание средств
 // @Description Этот эндпоинт на списание средств
-// @Produce json
-// @Success 200 {string}  string    ""
+// @Accept json
+// @Param request body models.BalanceWithdrawn true "JSON тело запроса"
+// @Success 200 {string}  string    "успешная обработка запроса"
+// @Failure 401 {string}  string    "пользователь не авторизован"
+// @Failure 422 {string}  string    "неверный номер заказа"
+// @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/balance/withdraw [post]
-func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request) {
-	// 200 — успешная обработка запроса;
-	// 401 — пользователь не авторизован;
-	// 402 — на счету недостаточно средств;
-	// 422 — неверный номер заказа;
-	// 500 — внутренняя ошибка сервера.
+// @Security Bearer
+func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
+	ctx, cancel := context.WithTimeout(req.Context(), 5*time.Second)
+	defer cancel()
 
+	token, _, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	claims := token.PrivateClaims()
+	user := claims["username"].(string)
+
+	var userBalance models.BalanceWithdrawals
+	var buf bytes.Buffer
+
+	_, err = buf.ReadFrom(req.Body)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = json.Unmarshal(buf.Bytes(), &userBalance)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if userBalance.Order == "" {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// err = storage.UserRegister(ctx, user.Login, user.Password)
+	// if errors.Is(err, store.ErrLoginDuplicate) {
+	// 	res.WriteHeader(http.StatusConflict)
+	// 	return
+	// } else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
+	// 	res.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
 	res.WriteHeader(http.StatusOK)
 }
 

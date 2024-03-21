@@ -59,7 +59,7 @@ func TestPostUserRegister(t *testing.T) {
 		GetUserBalance(w, r, storage)
 	})
 	r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
-		PostUserBalanceWithdraw(w, r)
+		PostUserBalanceWithdraw(w, r, storage)
 	})
 	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
 		GetUserWithdrawals(w, r)
@@ -158,7 +158,7 @@ func TestPostUserLogin(t *testing.T) {
 		GetUserBalance(w, r, storage)
 	})
 	r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
-		PostUserBalanceWithdraw(w, r)
+		PostUserBalanceWithdraw(w, r, storage)
 	})
 	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
 		GetUserWithdrawals(w, r)
@@ -265,7 +265,7 @@ func TestPostUserOrders(t *testing.T) {
 			GetUserBalance(w, r, storage)
 		})
 		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
-			PostUserBalanceWithdraw(w, r)
+			PostUserBalanceWithdraw(w, r, storage)
 		})
 		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
 			GetUserWithdrawals(w, r)
@@ -425,7 +425,7 @@ func TestGetUserOrders(t *testing.T) {
 			GetUserBalance(w, r, storage)
 		})
 		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
-			PostUserBalanceWithdraw(w, r)
+			PostUserBalanceWithdraw(w, r, storage)
 		})
 		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
 			GetUserWithdrawals(w, r)
@@ -547,7 +547,7 @@ func TestGetUserBalance(t *testing.T) {
 			GetUserBalance(w, r, storage)
 		})
 		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
-			PostUserBalanceWithdraw(w, r)
+			PostUserBalanceWithdraw(w, r, storage)
 		})
 		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
 			GetUserWithdrawals(w, r)

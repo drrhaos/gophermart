@@ -75,7 +75,7 @@ func main() {
 			handlers.GetUserBalance(w, r, storage)
 		})
 		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
-			handlers.PostUserBalanceWithdraw(w, r)
+			handlers.PostUserBalanceWithdraw(w, r, storage)
 		})
 		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
 			handlers.GetUserWithdrawals(w, r)

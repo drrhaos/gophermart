@@ -12,7 +12,7 @@
                     }
                 ],
                 "description": "Этот эндпоинт для получение текущего баланса пользователя",
-                "produces": [
+                "consumes": [
                     "application/json"
                 ],
                 "summary": "Получение текущего баланса пользователя",
@@ -40,14 +40,48 @@
         },
         "/api/user/balance/withdraw": {
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Этот эндпоинт на списание средств",
-                "produces": [
+                "consumes": [
                     "application/json"
                 ],
                 "summary": "Запрос на списание средств",
+                "parameters": [
+                    {
+                        "description": "JSON тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BalanceWithdrawn"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "422": {
+                        "description": "неверный номер заказа",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
                         "schema": {
                             "type": "string"
                         }
@@ -273,6 +307,17 @@
         }
     },
     "definitions": {
+        "models.BalanceWithdrawn": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "string"
+                },
+                "sum": {
+                    "type": "number"
+                }
+            }
+        },
         "models.User": {
             "type": "object",
             "properties": {

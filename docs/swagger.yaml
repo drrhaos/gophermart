@@ -1,4 +1,11 @@
 definitions:
+  models.BalanceWithdrawn:
+    properties:
+      order:
+        type: string
+      sum:
+        type: number
+    type: object
   models.User:
     properties:
       login:
@@ -13,9 +20,9 @@ info:
 paths:
   /api/user/balance:
     get:
-      description: Этот эндпоинт для получение текущего баланса пользователя
-      produces:
+      consumes:
       - application/json
+      description: Этот эндпоинт для получение текущего баланса пользователя
       responses:
         "200":
           description: успешная обработка запроса
@@ -34,14 +41,35 @@ paths:
       summary: Получение текущего баланса пользователя
   /api/user/balance/withdraw:
     post:
-      description: Этот эндпоинт на списание средств
-      produces:
+      consumes:
       - application/json
+      description: Этот эндпоинт на списание средств
+      parameters:
+      - description: JSON тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BalanceWithdrawn'
       responses:
         "200":
-          description: OK
+          description: успешная обработка запроса
           schema:
             type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "422":
+          description: неверный номер заказа
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
       summary: Запрос на списание средств
   /api/user/login:
     post:
