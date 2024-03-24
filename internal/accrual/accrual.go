@@ -78,7 +78,7 @@ func GetStatus(ctx context.Context, number int64, urlAccrual string) *models.Sta
 		logger.Logger.Warn("внутренняя ошибка сервера системы расчёта начислений баллов лояльности")
 		return nil
 	}
-
+	fmt.Println(string(body))
 	err = json.Unmarshal(body, &statusOrders)
 	if err != nil {
 		logger.Logger.Warn("не удалось распорсить запрос", zap.Error(err))

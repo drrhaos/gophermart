@@ -4,6 +4,7 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"time"
 
 	_ "gophermart/docs"
 	"gophermart/internal/accrual"
@@ -97,7 +98,7 @@ func main() {
 	}
 
 	for {
-		// time.Sleep(time.Second)
+		time.Sleep(1 * time.Second)
 		for _, metrics := range accrual.PrepareBatch(storage) {
 			jobs <- metrics
 		}
