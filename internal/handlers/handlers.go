@@ -327,12 +327,16 @@ func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request, storage
 		return
 	}
 
+	order, err := strconv.Atoi(userBalance.Order)
+	if err != nil || !luhn.Valid(order) {
+		logger.Logger.Info("Номер заказа не прошел проверку")
+		res.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
 	err = storage.UpdateUserBalanceWithdraw(ctx, user, userBalance.Order, userBalance.Sum)
 	if errors.Is(err, store.ErrInsufficientFunds) {
 		res.WriteHeader(http.StatusPaymentRequired)
-		return
-	} else if errors.Is(err, store.ErrOrderNotFound) {
-		res.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	} else if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)

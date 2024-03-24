@@ -241,18 +241,6 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 		return store.ErrInsufficientFunds
 	}
 
-	var countRow int64
-	err = db.Conn.QueryRow(ctx, `SELECT COUNT(*) FROM orders WHERE number = $1 AND user_id =$2`, order, userID).Scan(&countRow)
-	if err != nil {
-		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
-		return err
-	}
-
-	if countRow == 0 {
-		logger.Logger.Warn("заказ не существует")
-		return store.ErrOrderNotFound
-	}
-
 	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, user_id, sum, processed_at) VALUES ($1, $2, $3, $4) `, order, userID, sum, time.Now())
 	if err != nil {
 		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
