@@ -241,6 +241,19 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 		return store.ErrInsufficientFunds
 	}
 
+	number, err := strconv.ParseInt(order, 10, 64)
+	if err != nil {
+		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
+		return err
+
+	}
+
+	err = db.UploadUserOrders(ctx, login, int(number))
+	if err != nil {
+		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
+		return err
+	}
+
 	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, user_id, sum, processed_at) VALUES ($1, $2, $3, $4) `, order, userID, sum, time.Now())
 	if err != nil {
 		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
