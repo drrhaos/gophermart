@@ -31,3 +31,9 @@ type BalanceWithdrawals struct {
 	Sum         float64   `json:"sum" db:"sum"`                   // сумма вывода средств
 	ProcessedAt time.Time `json:"processed_at" db:"processed_at"` // временя загрузки, формат даты — RFC3339.
 }
+
+type StatusOrdersAccrual struct {
+	Order   string  `json:"order"`             // номер заказа
+	Status  string  `json:"status"`            // статус расчёта начисления
+	Accrual float64 `json:"accrual,omitempty"` // рассчитанные баллы к начислению, при отсутствии начисления — поле отсутствует в ответе.
+}

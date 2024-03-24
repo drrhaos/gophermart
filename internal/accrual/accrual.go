@@ -47,8 +47,8 @@ func UpdateStatusOrdersWorker(workerID int, storage *store.StorageContext, urlAc
 	}
 }
 
-func GetStatus(ctx context.Context, number int64, urlAccrual string) *models.StatusOrders {
-	var statusOrders *models.StatusOrders
+func GetStatus(ctx context.Context, number int64, urlAccrual string) *models.StatusOrdersAccrual {
+	var statusOrders *models.StatusOrdersAccrual
 
 	client := &http.Client{}
 	url := fmt.Sprintf(urlGetUserOrders, urlAccrual, number)

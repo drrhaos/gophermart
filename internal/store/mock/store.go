@@ -103,6 +103,6 @@ func (m *MockDB) GetOrdersProcessing(ctx context.Context) ([]int64, error) {
 	return nil, nil
 }
 
-func (m *MockDB) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrders) error {
+func (m *MockDB) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrdersAccrual) error {
 	return nil
 }

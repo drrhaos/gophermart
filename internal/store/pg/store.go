@@ -315,8 +315,8 @@ func (db *Database) GetOrdersProcessing(ctx context.Context) ([]int64, error) {
 	return ordersUser, nil
 }
 
-func (db *Database) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrders) error {
-	number, err := strconv.ParseInt(statusOrder.Number, 10, 64)
+func (db *Database) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrdersAccrual) error {
+	number, err := strconv.ParseInt(statusOrder.Order, 10, 64)
 	if err != nil {
 		return err
 	}
