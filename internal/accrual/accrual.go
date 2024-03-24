@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const urlGetUserOrders = "http://%s/api/orders/%d" // получение информации о расчёте начислений баллов лояльности
+const urlGetUserOrders = "%s/api/orders/%d" // получение информации о расчёте начислений баллов лояльности
 
 var ErrStatusNoContent = errors.New("StatusNoContent")
 var ErrStatusTooManyRequests = errors.New("StatusTooManyRequests")
