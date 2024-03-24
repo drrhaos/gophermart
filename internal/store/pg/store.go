@@ -326,5 +326,11 @@ func (db *Database) UpdateStatusOrders(ctx context.Context, statusOrder *models.
 		return err
 	}
 
+	_, err = db.Conn.Exec(ctx, `UPDATE users SET sum = sum + $1 WHERE id = (SELECT user_id FROM orders WHERE number = $2)`, statusOrder.Accrual, number)
+	if err != nil {
+		logger.Logger.Warn("Не удалось обновить баланс", zap.Error(err))
+		return err
+	}
+
 	return nil
 }
