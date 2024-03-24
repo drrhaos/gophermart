@@ -110,8 +110,8 @@ func TestPostUserRegister(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			bodyJson, _ := json.Marshal(test.body)
-			req := httptest.NewRequest(test.typeReqest, test.url, bytes.NewReader(bodyJson))
+			bodyJSON, _ := json.Marshal(test.body)
+			req := httptest.NewRequest(test.typeReqest, test.url, bytes.NewReader(bodyJSON))
 			w := httptest.NewRecorder()
 
 			r.ServeHTTP(w, req)
@@ -209,8 +209,8 @@ func TestPostUserLogin(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			bodyJson, _ := json.Marshal(test.body)
-			req := httptest.NewRequest(test.typeReqest, test.url, bytes.NewReader(bodyJson))
+			bodyJSON, _ := json.Marshal(test.body)
+			req := httptest.NewRequest(test.typeReqest, test.url, bytes.NewReader(bodyJSON))
 			w := httptest.NewRecorder()
 
 			r.ServeHTTP(w, req)
@@ -276,8 +276,8 @@ func TestPostUserOrders(t *testing.T) {
 		Login:    "test",
 		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
 	}
-	bodyJson, _ := json.Marshal(bodyLogin)
-	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJson))
+	bodyJSON, _ := json.Marshal(bodyLogin)
+	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJSON))
 	req.Header.Set("Accept", "application/json")
 
 	w := httptest.NewRecorder()
@@ -436,8 +436,8 @@ func TestGetUserOrders(t *testing.T) {
 		Login:    "test",
 		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
 	}
-	bodyJson, _ := json.Marshal(bodyLogin)
-	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJson))
+	bodyJSON, _ := json.Marshal(bodyLogin)
+	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJSON))
 	req.Header.Set("Accept", "application/json")
 
 	w := httptest.NewRecorder()
@@ -449,8 +449,8 @@ func TestGetUserOrders(t *testing.T) {
 		Login:    "test2",
 		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC",
 	}
-	bodyJson2, _ := json.Marshal(bodyLogin2)
-	req = httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJson2))
+	bodyJSON2, _ := json.Marshal(bodyLogin2)
+	req = httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJSON2))
 	req.Header.Set("Accept", "application/json")
 
 	w = httptest.NewRecorder()
@@ -558,8 +558,8 @@ func TestGetUserBalance(t *testing.T) {
 		Login:    "test",
 		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
 	}
-	bodyJson, _ := json.Marshal(bodyLogin)
-	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJson))
+	bodyJSON, _ := json.Marshal(bodyLogin)
+	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJSON))
 	req.Header.Set("Accept", "application/json")
 
 	w := httptest.NewRecorder()
