@@ -206,6 +206,7 @@ func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.S
 func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
+	res.Header().Set("Content-Type", "application/json")
 	token, _, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
@@ -237,7 +238,7 @@ func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.St
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	res.Header().Set("Content-Type", "application/json")
+
 	res.WriteHeader(http.StatusOK)
 }
 
