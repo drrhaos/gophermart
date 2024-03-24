@@ -279,7 +279,7 @@ func GetUserBalance(res http.ResponseWriter, req *http.Request, storage *store.S
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 }
 
@@ -340,7 +340,6 @@ func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request, storage
 	res.WriteHeader(http.StatusOK)
 }
 
-// @Produce json
 // GetUserBalance Получение информации о выводе средств
 // @Summary Получение информации о выводе средств
 // @Description Этот эндпоинт для получение информации о выводе средств
@@ -386,6 +385,6 @@ func GetUserWithdrawals(res http.ResponseWriter, req *http.Request, storage *sto
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 }
