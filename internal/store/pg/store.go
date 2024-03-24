@@ -226,10 +226,10 @@ func (db *Database) GetUserBalance(ctx context.Context, login string) (models.Ba
 }
 
 func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string, order string, sum float64) error {
-	var userId int64
+	var userID int64
 	var balance float64
 	var withdrawn float64
-	err := db.Conn.QueryRow(ctx, `SELECT id, sum, withdrawn FROM users WHERE login = $1`, login).Scan(&userId, &balance, &withdrawn)
+	err := db.Conn.QueryRow(ctx, `SELECT id, sum, withdrawn FROM users WHERE login = $1`, login).Scan(&userID, &balance, &withdrawn)
 	if err != nil {
 		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
 		return err
@@ -241,7 +241,7 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 	}
 
 	var countRow int64
-	err = db.Conn.QueryRow(ctx, `SELECT COUNT(*) FROM orders WHERE number = $1 AND user_id =$2`, order, userId).Scan(&countRow)
+	err = db.Conn.QueryRow(ctx, `SELECT COUNT(*) FROM orders WHERE number = $1 AND user_id =$2`, order, userID).Scan(&countRow)
 	if err != nil {
 		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
 		return err
@@ -252,7 +252,7 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 		return store.ErrOrderNotFound
 	}
 
-	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, user_id, sum, processed_at) VALUES ($1, $2, $3, $4) `, order, userId, sum, time.Now())
+	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, user_id, sum, processed_at) VALUES ($1, $2, $3, $4) `, order, userID, sum, time.Now())
 	if err != nil {
 		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
 		return err
