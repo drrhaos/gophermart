@@ -237,7 +237,7 @@ func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.St
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 }
 
