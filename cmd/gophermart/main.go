@@ -56,6 +56,7 @@ func main() {
 	r.Use(middleware.Compress(5, "application/json", "text/html"))
 
 	logger.Logger.Info("Сервер запущен", zap.String("адрес", cfg.RunAddress))
+	logger.Logger.Info(cfg.AccrualSystemAddress)
 
 	r.Mount("/swagger", httpSwagger.Handler())
 	r.Post(urlPostUserRegister, func(w http.ResponseWriter, r *http.Request) {
