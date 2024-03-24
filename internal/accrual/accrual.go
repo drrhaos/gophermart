@@ -35,20 +35,19 @@ func PrepareBatch(storage *store.StorageContext) (statusOrders []int64) {
 }
 
 func UpdateStatusOrdersWorker(workerID int, storage *store.StorageContext, urlAccrual string, jobs <-chan int64) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	ctx := context.Background()
 	for job := range jobs {
 		logger.Logger.Info(fmt.Sprintf("Воркер %d", workerID))
 
-		statusOrder, ok := GetStatus(ctx, job, urlAccrual)
-		if ok {
+		statusOrder := GetStatus(ctx, job, urlAccrual)
+		if statusOrder != nil {
 			storage.UpdateStatusOrders(ctx, statusOrder)
 		}
 
 	}
 }
 
-func GetStatus(ctx context.Context, number int64, urlAccrual string) (*models.StatusOrders, bool) {
+func GetStatus(ctx context.Context, number int64, urlAccrual string) *models.StatusOrders {
 	var statusOrders *models.StatusOrders
 
 	client := &http.Client{}
@@ -58,32 +57,32 @@ func GetStatus(ctx context.Context, number int64, urlAccrual string) (*models.St
 	resp, err := client.Do(r)
 	if err != nil {
 		logger.Logger.Warn("ошибка запроса", zap.Error(err))
-		return nil, false
+		return nil
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logger.Logger.Warn("не удалось прочитать данные", zap.Error(err))
-		return nil, false
+		return nil
 	}
 
 	switch resp.StatusCode {
 	case 204:
 		logger.Logger.Warn("заказ не зарегистрирован в системе расчёта")
-		return nil, false
+		return nil
 	case 429:
 		logger.Logger.Warn("превышено количество запросов к сервису")
-		return nil, false
+		return nil
 	case 500:
 		logger.Logger.Warn("внутренняя ошибка сервера системы расчёта начислений баллов лояльности")
-		return nil, false
+		return nil
 	}
 
 	err = json.Unmarshal(body, &statusOrders)
 	if err != nil {
 		logger.Logger.Warn("не удалось распорсить запрос", zap.Error(err))
-		return nil, false
+		return nil
 	}
-	return statusOrders, true
+	return statusOrders
 }
