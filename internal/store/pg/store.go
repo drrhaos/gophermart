@@ -78,6 +78,17 @@ func (db *Database) Migrations(ctx context.Context) error {
 		return err
 	}
 
+	_, err = db.Conn.Exec(ctx,
+		`CREATE TABLE IF NOT EXISTS withdrawals
+		(
+			number bigint UNIQUE PRIMARY KEY REFERENCES orders(number),
+			sum float,
+			processed_at timestamp with time zone
+		)`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -214,5 +225,43 @@ func (db *Database) GetUserBalance(ctx context.Context, login string) (models.Ba
 }
 
 func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string, order string, sum float64) error {
+	var userId int64
+	var balance float64
+	var withdrawn float64
+	err := db.Conn.QueryRow(ctx, `SELECT id, sum, withdrawn FROM users WHERE login = $1`, login).Scan(&userId, &balance, &withdrawn)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return err
+	}
+
+	if balance < sum {
+		logger.Logger.Warn("на счету недостаточно средств")
+		return store.ErrInsufficientFunds
+	}
+
+	var countRow int64
+	err = db.Conn.QueryRow(ctx, `SELECT COUNT(*) FROM orders WHERE number = $1 AND user_id =$2`, order, userId).Scan(&countRow)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return err
+	}
+
+	if countRow == 0 {
+		logger.Logger.Warn("заказ не существует")
+		return store.ErrOrderNotFound
+	}
+
+	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, sum, processed_at) VALUES ($1, $2, $3) `, order, sum, time.Now())
+	if err != nil {
+		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
+		return err
+	}
+
+	_, err = db.Conn.Exec(ctx, `UPDATE users SET sum = $1, withdrawn = $2 WHERE login = $3`, balance-sum, withdrawn+sum, login)
+	if err != nil {
+		logger.Logger.Warn("Не удалось обновить баланс", zap.Error(err))
+		return err
+	}
+
 	return nil
 }

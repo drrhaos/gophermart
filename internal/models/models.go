@@ -17,17 +17,17 @@ type StatusOrders struct {
 }
 
 type Balance struct {
-	Current   float64 `json:"current"`
-	Withdrawn float64 `json:"withdrawn"`
+	Current   float64 `json:"current"`   // текущий баланс пользователя
+	Withdrawn float64 `json:"withdrawn"` // сумма использованных за весь период баллов
 }
 
 type BalanceWithdrawn struct {
-	Order string  `json:"order"`
-	Sum   float64 `json:"sum"`
+	Order string  `json:"order"` // номер заказа
+	Sum   float64 `json:"sum"`   // сумма списания
 }
 
 type BalanceWithdrawals struct {
-	Order       string  `json:"order"`
-	Sum         float64 `json:"sum"`
-	ProcessedAt string  `json:"processed_at"` // временЯ загрузки, формат даты — RFC3339.
+	Order       string  `json:"order"`        // номер заказа
+	Sum         float64 `json:"sum"`          // сумма вывода средств
+	ProcessedAt string  `json:"processed_at"` // временя загрузки, формат даты — RFC3339.
 }

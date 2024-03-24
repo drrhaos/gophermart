@@ -24,6 +24,8 @@ var ErrLoginDuplicate = errors.New("user duplicate")
 var ErrAuthentication = errors.New("invalid user name or password")
 var ErrDuplicateOrder = errors.New("duplicate order")
 var ErrDuplicateOrderOtherUser = errors.New("duplicate order other user")
+var ErrOrderNotFound = errors.New("order not found")
+var ErrInsufficientFunds = errors.New("insufficient funds")
 
 func (sc *StorageContext) SetStorage(storage StorageInterface) {
 	sc.storage = storage

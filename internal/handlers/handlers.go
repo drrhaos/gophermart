@@ -290,6 +290,7 @@ func GetUserBalance(res http.ResponseWriter, req *http.Request, storage *store.S
 // @Param request body models.BalanceWithdrawn true "JSON тело запроса"
 // @Success 200 {string}  string    "успешная обработка запроса"
 // @Failure 401 {string}  string    "пользователь не авторизован"
+// @Failure 402 {string}  string    "на счету недостаточно средств"
 // @Failure 422 {string}  string    "неверный номер заказа"
 // @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/balance/withdraw [post]
@@ -326,10 +327,13 @@ func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request, storage
 	}
 
 	err = storage.UpdateUserBalanceWithdraw(ctx, user, userBalance.Order, userBalance.Sum)
-	if errors.Is(err, store.ErrLoginDuplicate) {
-		res.WriteHeader(http.StatusConflict)
+	if errors.Is(err, store.ErrInsufficientFunds) {
+		res.WriteHeader(http.StatusPaymentRequired)
 		return
-	} else if err != nil && !errors.Is(err, store.ErrLoginDuplicate) {
+	} else if errors.Is(err, store.ErrOrderNotFound) {
+		res.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	} else if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
