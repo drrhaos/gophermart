@@ -74,6 +74,12 @@
                             "type": "string"
                         }
                     },
+                    "402": {
+                        "description": "на счету недостаточно средств",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "422": {
                         "description": "неверный номер заказа",
                         "schema": {
@@ -290,14 +296,38 @@
         },
         "/api/user/withdrawals": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Этот эндпоинт для получение информации о выводе средств",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "summary": "Получение информации о выводе средств",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "204": {
+                        "description": "нет ни одного списания",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
                         "schema": {
                             "type": "string"
                         }
@@ -311,9 +341,11 @@
             "type": "object",
             "properties": {
                 "order": {
+                    "description": "номер заказа",
                     "type": "string"
                 },
                 "sum": {
+                    "description": "сумма списания",
                     "type": "number"
                 }
             }

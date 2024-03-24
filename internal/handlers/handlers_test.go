@@ -62,7 +62,7 @@ func TestPostUserRegister(t *testing.T) {
 		PostUserBalanceWithdraw(w, r, storage)
 	})
 	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
-		GetUserWithdrawals(w, r)
+		GetUserWithdrawals(w, r, storage)
 	})
 
 	type want struct {
@@ -161,7 +161,7 @@ func TestPostUserLogin(t *testing.T) {
 		PostUserBalanceWithdraw(w, r, storage)
 	})
 	r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
-		GetUserWithdrawals(w, r)
+		GetUserWithdrawals(w, r, storage)
 	})
 
 	type want struct {
@@ -268,7 +268,7 @@ func TestPostUserOrders(t *testing.T) {
 			PostUserBalanceWithdraw(w, r, storage)
 		})
 		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
-			GetUserWithdrawals(w, r)
+			GetUserWithdrawals(w, r, storage)
 		})
 	})
 
@@ -428,7 +428,7 @@ func TestGetUserOrders(t *testing.T) {
 			PostUserBalanceWithdraw(w, r, storage)
 		})
 		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
-			GetUserWithdrawals(w, r)
+			GetUserWithdrawals(w, r, storage)
 		})
 	})
 
@@ -550,7 +550,7 @@ func TestGetUserBalance(t *testing.T) {
 			PostUserBalanceWithdraw(w, r, storage)
 		})
 		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
-			GetUserWithdrawals(w, r)
+			GetUserWithdrawals(w, r, storage)
 		})
 	})
 

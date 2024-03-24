@@ -27,7 +27,7 @@ type BalanceWithdrawn struct {
 }
 
 type BalanceWithdrawals struct {
-	Order       string  `json:"order"`        // номер заказа
-	Sum         float64 `json:"sum"`          // сумма вывода средств
-	ProcessedAt string  `json:"processed_at"` // временя загрузки, формат даты — RFC3339.
+	Order       string    `json:"order" db:"order"`               // номер заказа
+	Sum         float64   `json:"sum" db:"sum"`                   // сумма вывода средств
+	ProcessedAt time.Time `json:"processed_at" db:"processed_at"` // временя загрузки, формат даты — RFC3339.
 }

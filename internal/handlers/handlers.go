@@ -340,17 +340,52 @@ func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request, storage
 	res.WriteHeader(http.StatusOK)
 }
 
+// @Produce json
 // GetUserBalance Получение информации о выводе средств
 // @Summary Получение информации о выводе средств
 // @Description Этот эндпоинт для получение информации о выводе средств
-// @Produce json
-// @Success 200 {string}  string    ""
+// @Produce      json
+// @Success 200 {string}  string    "успешная обработка запроса"
+// @Success 204 {string}  string    "нет ни одного списания"
+// @Failure 401 {string}  string    "пользователь не авторизован"
+// @Failure 500 {string}  string    "внутренняя ошибка сервера"
 // @Router /api/user/withdrawals [get]
-func GetUserWithdrawals(res http.ResponseWriter, req *http.Request) {
-	// 200 — успешная обработка запроса.
-	// 204 — нет ни одного списания.
-	// 401 — пользователь не авторизован.
-	// 500 — внутренняя ошибка сервер
+// @Security Bearer
+func GetUserWithdrawals(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
+
+	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
+	defer cancel()
+	token, _, err := jwtauth.FromContext(ctx)
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	claims := token.PrivateClaims()
+	user := claims["username"].(string)
+
+	withdrawalsUser, err := storage.GetUserWithdrawals(ctx, user)
+
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if len(withdrawalsUser) == 0 {
+		res.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	jsonBytes, err := json.Marshal(withdrawalsUser)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = res.Write(jsonBytes)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	res.WriteHeader(http.StatusOK)
 }

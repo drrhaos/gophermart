@@ -82,6 +82,7 @@ func (db *Database) Migrations(ctx context.Context) error {
 		`CREATE TABLE IF NOT EXISTS withdrawals
 		(
 			number bigint UNIQUE PRIMARY KEY REFERENCES orders(number),
+			user_id bigint REFERENCES users(id),
 			sum float,
 			processed_at timestamp with time zone
 		)`)
@@ -251,7 +252,7 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 		return store.ErrOrderNotFound
 	}
 
-	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, sum, processed_at) VALUES ($1, $2, $3) `, order, sum, time.Now())
+	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, user_id, sum, processed_at) VALUES ($1, $2, $3, $4) `, order, userId, sum, time.Now())
 	if err != nil {
 		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
 		return err
@@ -264,4 +265,27 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 	}
 
 	return nil
+}
+
+func (db *Database) GetUserWithdrawals(ctx context.Context, login string) ([]models.BalanceWithdrawals, error) {
+	var withdrawalUser models.BalanceWithdrawals
+	var withdrawalsUser []models.BalanceWithdrawals
+	rows, err := db.Conn.Query(ctx, `SELECT number,sum,processed_at FROM withdrawals WHERE user_id = (SELECT id FROM users WHERE login = $1) ORDER BY processed_at DESC`, login)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return withdrawalsUser, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&withdrawalUser.Order, &withdrawalUser.Sum, &withdrawalUser.ProcessedAt)
+		if err != nil {
+			logger.Logger.Warn("Ошибка при сканировании строки:", zap.Error(err))
+			return withdrawalsUser, err
+		}
+		withdrawalsUser = append(withdrawalsUser, withdrawalUser)
+	}
+
+	return withdrawalsUser, nil
 }

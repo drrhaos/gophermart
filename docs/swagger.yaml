@@ -2,8 +2,10 @@ definitions:
   models.BalanceWithdrawn:
     properties:
       order:
+        description: номер заказа
         type: string
       sum:
+        description: сумма списания
         type: number
     type: object
   models.User:
@@ -58,6 +60,10 @@ paths:
             type: string
         "401":
           description: пользователь не авторизован
+          schema:
+            type: string
+        "402":
+          description: на счету недостаточно средств
           schema:
             type: string
         "422":
@@ -204,11 +210,26 @@ paths:
       description: Этот эндпоинт для получение информации о выводе средств
       produces:
       - application/json
+      - application/json
       responses:
         "200":
-          description: OK
+          description: успешная обработка запроса
           schema:
             type: string
+        "204":
+          description: нет ни одного списания
+          schema:
+            type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
       summary: Получение информации о выводе средств
 securityDefinitions:
   Bearer:
