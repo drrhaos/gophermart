@@ -289,3 +289,37 @@ func (db *Database) GetUserWithdrawals(ctx context.Context, login string) ([]mod
 
 	return withdrawalsUser, nil
 }
+
+func (db *Database) GetOrdersProcessing(ctx context.Context) ([]int64, error) {
+	var orderUser int64
+	var ordersUser []int64
+	rows, err := db.Conn.Query(ctx, `SELECT number FROM orders WHERE status = 'NEW' OR status = 'PROCESSING'  ORDER BY uploaded_at DESC`)
+	if err != nil {
+		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
+		return ordersUser, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&orderUser)
+		if err != nil {
+			logger.Logger.Warn("Ошибка при сканировании строки:", zap.Error(err))
+			return ordersUser, err
+		}
+
+		ordersUser = append(ordersUser, orderUser)
+	}
+
+	return ordersUser, nil
+}
+
+func (db *Database) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrders) error {
+	_, err := db.Conn.Exec(ctx, `UPDATE orders SET status = $1, accrual = $2 WHERE number = $3`, statusOrder.Status, statusOrder.Accrual, statusOrder.Number)
+	if err != nil {
+		logger.Logger.Warn("Не удалось обновить баланс", zap.Error(err))
+		return err
+	}
+
+	return nil
+}

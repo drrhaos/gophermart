@@ -14,6 +14,8 @@ type StorageInterface interface {
 	GetUserBalance(ctx context.Context, login string) (models.Balance, error)
 	UpdateUserBalanceWithdraw(ctx context.Context, login string, order string, sum float64) error
 	GetUserWithdrawals(ctx context.Context, login string) ([]models.BalanceWithdrawals, error)
+	GetOrdersProcessing(ctx context.Context) ([]int64, error)
+	UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrders) error
 	Ping(ctx context.Context) bool
 }
 
@@ -62,4 +64,12 @@ func (sc *StorageContext) GetUserWithdrawals(ctx context.Context, login string) 
 
 func (sc *StorageContext) Ping(ctx context.Context) (exists bool) {
 	return sc.storage.Ping(ctx)
+}
+
+func (sc *StorageContext) GetOrdersProcessing(ctx context.Context) ([]int64, error) {
+	return sc.storage.GetOrdersProcessing(ctx)
+}
+
+func (sc *StorageContext) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrders) error {
+	return sc.storage.UpdateStatusOrders(ctx, statusOrder)
 }

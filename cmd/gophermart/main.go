@@ -4,8 +4,10 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"time"
 
 	_ "gophermart/docs"
+	"gophermart/internal/accrual"
 	"gophermart/internal/configure"
 	"gophermart/internal/handlers"
 	"gophermart/internal/logger"
@@ -36,6 +38,7 @@ var tokenAuth *jwtauth.JWTAuth
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
+	jobs := make(chan int64, 10)
 
 	logger.Init()
 	ok := cfg.ReadStartParams()
@@ -81,9 +84,22 @@ func main() {
 			handlers.GetUserWithdrawals(w, r, storage)
 		})
 	})
+	go func() {
+		if err := http.ListenAndServe(cfg.RunAddress, r); err != nil {
+			logger.Logger.Fatal(err.Error())
+		}
+	}()
 
-	if err := http.ListenAndServe(cfg.RunAddress, r); err != nil {
-		logger.Logger.Fatal(err.Error())
+	for w := 1; w <= 10; w++ {
+		go func(workerID int) {
+			accrual.UpdateStatusOrdersWorker(workerID, storage, cfg.AccrualSystemAddress, jobs)
+		}(w)
 	}
 
+	for {
+		time.Sleep(5 * time.Second)
+		for _, metrics := range accrual.PrepareBatch(storage) {
+			jobs <- metrics
+		}
+	}
 }
