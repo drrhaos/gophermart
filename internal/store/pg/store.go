@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strconv"
 	"time"
 
 	"gophermart/internal/logger"
@@ -315,7 +316,11 @@ func (db *Database) GetOrdersProcessing(ctx context.Context) ([]int64, error) {
 }
 
 func (db *Database) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrders) error {
-	_, err := db.Conn.Exec(ctx, `UPDATE orders SET status = $1, accrual = $2 WHERE number = $3`, statusOrder.Status, statusOrder.Accrual, statusOrder.Number)
+	number, err := strconv.ParseInt(statusOrder.Number, 10, 64)
+	if err != nil {
+		return err
+	}
+	_, err = db.Conn.Exec(ctx, `UPDATE orders SET status = $1, accrual = $2 WHERE number = $3`, statusOrder.Status, statusOrder.Accrual, number)
 	if err != nil {
 		logger.Logger.Warn("Не удалось обновить баланс", zap.Error(err))
 		return err
