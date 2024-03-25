@@ -254,6 +254,7 @@ func GetUserOrders(res http.ResponseWriter, req *http.Request, storage *store.St
 func GetUserBalance(res http.ResponseWriter, req *http.Request, storage *store.StorageContext) {
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
+	res.Header().Set("Content-Type", "application/json")
 	token, _, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
@@ -280,7 +281,6 @@ func GetUserBalance(res http.ResponseWriter, req *http.Request, storage *store.S
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 }
 
