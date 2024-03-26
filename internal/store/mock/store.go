@@ -122,17 +122,17 @@ func (m *MockDB) UpdateUserBalanceWithdraw(ctx context.Context, login string, or
 }
 
 func (m *MockDB) GetUserWithdrawals(ctx context.Context, login string) ([]models.BalanceWithdrawals, error) {
-	var user_id string
+	var userID string
 	var withdrawalUser models.BalanceWithdrawals
 	var withdrawalsUser []models.BalanceWithdrawals
 	for _, user := range m.Users {
 		if user["login"] == login {
-			user_id = user["id"]
+			userID = user["id"]
 		}
 	}
 
 	for _, withdrawal := range m.Withdrawals {
-		if withdrawal["user_id"] == user_id {
+		if withdrawal["user_id"] == userID {
 			withdrawalUser.Order = withdrawal["order"]
 			withdrawalUser.Sum, _ = strconv.ParseFloat(withdrawal["sum"], 64)
 			withdrawalUser.ProcessedAt, _ = time.Parse("2006-01-02T15:04:05Z", withdrawal["processed_at"])
