@@ -359,6 +359,7 @@ func GetUserWithdrawals(res http.ResponseWriter, req *http.Request, storage *sto
 
 	ctx, cancel := context.WithTimeout(req.Context(), 30*time.Second)
 	defer cancel()
+	res.Header().Set("Content-Type", "application/json")
 	token, _, err := jwtauth.FromContext(ctx)
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
@@ -390,7 +391,5 @@ func GetUserWithdrawals(res http.ResponseWriter, req *http.Request, storage *sto
 		res.WriteHeader(http.StatusNoContent)
 		return
 	}
-
-	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 }
