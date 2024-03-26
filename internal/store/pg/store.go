@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -273,7 +272,6 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 func (db *Database) GetUserWithdrawals(ctx context.Context, login string) ([]models.BalanceWithdrawals, error) {
 	var withdrawalUser models.BalanceWithdrawals
 	var withdrawalsUser []models.BalanceWithdrawals
-	logger.Logger.Info(login)
 	rows, err := db.Conn.Query(ctx, `SELECT number,sum,processed_at FROM withdrawals WHERE user_id = (SELECT id FROM users WHERE login = $1) ORDER BY processed_at DESC`, login)
 	if err != nil {
 		logger.Logger.Warn("Ошибка выполнения запроса ", zap.Error(err))
@@ -291,7 +289,6 @@ func (db *Database) GetUserWithdrawals(ctx context.Context, login string) ([]mod
 
 		withdrawalsUser = append(withdrawalsUser, withdrawalUser)
 	}
-	fmt.Println(withdrawalsUser)
 	return withdrawalsUser, nil
 }
 
