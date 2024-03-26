@@ -375,6 +375,11 @@ func GetUserWithdrawals(res http.ResponseWriter, req *http.Request, storage *sto
 		return
 	}
 
+	if len(withdrawalsUser) == 0 {
+		res.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	jsonBytes, err := json.Marshal(withdrawalsUser)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -387,9 +392,5 @@ func GetUserWithdrawals(res http.ResponseWriter, req *http.Request, storage *sto
 		return
 	}
 
-	if len(withdrawalsUser) == 0 {
-		res.WriteHeader(http.StatusNoContent)
-		return
-	}
 	res.WriteHeader(http.StatusOK)
 }

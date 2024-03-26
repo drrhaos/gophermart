@@ -767,3 +767,140 @@ func TestPostUserBalanceWithdraw(t *testing.T) {
 		})
 	}
 }
+
+func TestGetUserWithdrawals(t *testing.T) {
+	logger.Init()
+	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
+
+	mockDB := &mock.MockDB{
+		Users: map[int]map[string]string{
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "10", "withdrawn": "6", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "4", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"id": "3", "login": "test3", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "0", "withdrawn": "0", "registered_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Orders: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "status": "PROCESSED", "accrual": "10", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			4: {"number": "9347167976", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Withdrawals: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "sum": "5", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "sum": "1", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "sum": "4", "processed_at": "2024-03-19 19:35:17.662533+00"},
+		},
+	}
+
+	storage := &store.StorageContext{}
+	storage.SetStorage(mockDB)
+
+	r := chi.NewRouter()
+	r.Use(middleware.Compress(5, "application/json", "text/html"))
+
+	r.Post(urlPostUserRegister, func(w http.ResponseWriter, r *http.Request) {
+		PostUserRegister(w, r, storage, tokenAuth)
+	})
+	r.Post(urlPostUserLogin, func(w http.ResponseWriter, r *http.Request) {
+		PostUserLogin(w, r, storage, tokenAuth)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+
+		r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
+			PostUserOrders(w, r, storage)
+		})
+		r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
+			GetUserOrders(w, r, storage)
+		})
+		r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
+			GetUserBalance(w, r, storage)
+		})
+		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
+			PostUserBalanceWithdraw(w, r, storage)
+		})
+		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
+			GetUserWithdrawals(w, r, storage)
+		})
+	})
+
+	bodyLogin := models.User{
+		Login:    "test",
+		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
+	}
+	bodyJSON, _ := json.Marshal(bodyLogin)
+	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJSON))
+	req.Header.Set("Accept", "application/json")
+
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+	jwtTok := w.Header().Get("Authorization")
+
+	bodyLogin = models.User{
+		Login:    "test3",
+		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
+	}
+	bodyJSON, _ = json.Marshal(bodyLogin)
+	req = httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJSON))
+	req.Header.Set("Accept", "application/json")
+
+	w = httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+	jwtTok3 := w.Header().Get("Authorization")
+
+	type want struct {
+		code int
+	}
+	tests := []struct {
+		name       string
+		url        string
+		jwtToken   string
+		typeReqest string
+		want       want
+	}{
+		{
+			name:       "успешная обработка запроса",
+			url:        urlGetUserWithdrawals,
+			jwtToken:   jwtTok,
+			typeReqest: http.MethodGet,
+			want: want{
+				code: 200,
+			},
+		},
+		{
+			name:       "нет ни одного списания",
+			url:        urlGetUserWithdrawals,
+			jwtToken:   jwtTok3,
+			typeReqest: http.MethodGet,
+			want: want{
+				code: 204,
+			},
+		},
+		{
+			name:       "пользователь не авторизован",
+			url:        urlGetUserWithdrawals,
+			typeReqest: http.MethodGet,
+			want: want{
+				code: 401,
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			req := httptest.NewRequest(test.typeReqest, test.url, nil)
+
+			w := httptest.NewRecorder()
+			req.Header.Set("Authorization", test.jwtToken)
+
+			r.ServeHTTP(w, req)
+
+			if w.Code != test.want.code {
+				t.Errorf("expected status OK; got %v", w.Code)
+			}
+
+			assert.Equal(t, test.want.code, w.Code)
+		})
+	}
+}
