@@ -2,15 +2,20 @@ package mock
 
 import (
 	"context"
+	"fmt"
+	"gophermart/internal/logger"
 	"gophermart/internal/models"
 	"gophermart/internal/store"
 	"strconv"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type MockDB struct {
-	Users  map[int]map[string]string
-	Orders map[int]map[string]string
+	Users       map[int]map[string]string
+	Orders      map[int]map[string]string
+	Withdrawals map[int]map[string]string
 }
 
 func (m *MockDB) UserRegister(ctx context.Context, login string, password string) error {
@@ -31,7 +36,7 @@ func (m *MockDB) UserLogin(ctx context.Context, login string, password string) e
 	return nil
 }
 
-func (m *MockDB) UploadUserOrders(ctx context.Context, login string, order int) error {
+func (m *MockDB) UploadUserOrders(ctx context.Context, login string, order int64) error {
 	idUser := "-1"
 	for _, user := range m.Users {
 		if user["login"] == login {
@@ -39,9 +44,9 @@ func (m *MockDB) UploadUserOrders(ctx context.Context, login string, order int) 
 		}
 	}
 	for _, orderRow := range m.Orders {
-		if orderRow["number"] == strconv.Itoa(order) && orderRow["user_id"] == idUser {
+		if orderRow["number"] == fmt.Sprintf("%d", order) && orderRow["user_id"] == idUser {
 			return store.ErrDuplicateOrder
-		} else if orderRow["number"] == strconv.Itoa(order) && idUser != "-1" && orderRow["user_id"] != idUser {
+		} else if orderRow["number"] == fmt.Sprintf("%d", order) && idUser != "-1" && orderRow["user_id"] != idUser {
 			return store.ErrDuplicateOrderOtherUser
 		}
 	}
@@ -86,11 +91,33 @@ func (m *MockDB) GetUserBalance(ctx context.Context, login string) (models.Balan
 	return userBalance, nil
 }
 
-func (m *MockDB) Ping(ctx context.Context) (exists bool) {
-	return true
-}
-
 func (m *MockDB) UpdateUserBalanceWithdraw(ctx context.Context, login string, order string, sum float64) error {
+	var balanceS string
+	for _, user := range m.Users {
+		if user["login"] == login {
+			balanceS = user["sum"]
+		}
+	}
+
+	number, err := strconv.ParseInt(order, 10, 64)
+	if err != nil {
+		logger.Logger.Warn("Не удалось добавить значение", zap.Error(err))
+		return err
+
+	}
+
+	balance, _ := strconv.ParseFloat(balanceS, 64)
+	if balance < sum {
+		logger.Logger.Warn("на счету недостаточно средств")
+		return store.ErrInsufficientFunds
+	}
+
+	err = m.UploadUserOrders(ctx, login, number)
+	if err != nil {
+		logger.Logger.Warn("Не удалось добавить значение", zap.Error(err))
+		return err
+	}
+
 	return nil
 }
 
@@ -105,4 +132,8 @@ func (m *MockDB) GetOrdersProcessing(ctx context.Context) ([]int64, error) {
 
 func (m *MockDB) UpdateStatusOrders(ctx context.Context, statusOrder *models.StatusOrdersAccrual) error {
 	return nil
+}
+
+func (m *MockDB) Ping(ctx context.Context) (exists bool) {
+	return true
 }

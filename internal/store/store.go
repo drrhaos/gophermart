@@ -9,7 +9,7 @@ import (
 type StorageInterface interface {
 	UserRegister(ctx context.Context, login string, password string) error
 	UserLogin(ctx context.Context, login string, password string) error
-	UploadUserOrders(ctx context.Context, login string, order int) error
+	UploadUserOrders(ctx context.Context, login string, order int64) error
 	GetUserOrders(ctx context.Context, login string) ([]models.StatusOrders, error)
 	GetUserBalance(ctx context.Context, login string) (models.Balance, error)
 	UpdateUserBalanceWithdraw(ctx context.Context, login string, order string, sum float64) error
@@ -42,7 +42,7 @@ func (sc *StorageContext) UserLogin(ctx context.Context, login string, password 
 	return sc.storage.UserLogin(ctx, login, password)
 }
 
-func (sc *StorageContext) UploadUserOrders(ctx context.Context, login string, order int) error {
+func (sc *StorageContext) UploadUserOrders(ctx context.Context, login string, order int64) error {
 	return sc.storage.UploadUserOrders(ctx, login, order)
 }
 

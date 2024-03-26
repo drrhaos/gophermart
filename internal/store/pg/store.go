@@ -151,7 +151,7 @@ func (db *Database) UserLogin(ctx context.Context, login string, password string
 	return nil
 }
 
-func (db *Database) UploadUserOrders(ctx context.Context, login string, order int) error {
+func (db *Database) UploadUserOrders(ctx context.Context, login string, order int64) error {
 	var idUser int
 	err := db.Conn.QueryRow(ctx, `SELECT id FROM users WHERE login = $1`, login).Scan(&idUser)
 	if err != nil && err != pgx.ErrNoRows {
@@ -181,7 +181,7 @@ func (db *Database) UploadUserOrders(ctx context.Context, login string, order in
 			logger.Logger.Warn("Дубликат заказа")
 			return store.ErrDuplicateOrder
 		} else {
-			logger.Logger.Warn("Не удалось добавить пользователя ", zap.Error(err))
+			logger.Logger.Warn("Не удалось добавить заказ ", zap.Error(err))
 			return err
 		}
 	}
@@ -248,15 +248,15 @@ func (db *Database) UpdateUserBalanceWithdraw(ctx context.Context, login string,
 
 	}
 
-	err = db.UploadUserOrders(ctx, login, int(number))
+	err = db.UploadUserOrders(ctx, login, number)
 	if err != nil {
-		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
+		logger.Logger.Warn("Не удалось добавить значение", zap.Error(err))
 		return err
 	}
 
 	_, err = db.Conn.Exec(ctx, `INSERT INTO withdrawals (number, user_id, sum, processed_at) VALUES ($1, $2, $3, $4) `, order, userID, sum, time.Now())
 	if err != nil {
-		logger.Logger.Warn("Не удалось добавмить значение", zap.Error(err))
+		logger.Logger.Warn("Не удалось добавить значение", zap.Error(err))
 		return err
 	}
 

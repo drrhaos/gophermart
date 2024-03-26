@@ -168,7 +168,7 @@ func PostUserOrders(res http.ResponseWriter, req *http.Request, storage *store.S
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	order, err := strconv.Atoi(string(body))
+	order, err := strconv.ParseInt(string(body), 10, 64)
 
 	if err != nil || !luhn.Valid(order) {
 		logger.Logger.Info("Номер заказа не прошел проверку")
@@ -327,7 +327,7 @@ func PostUserBalanceWithdraw(res http.ResponseWriter, req *http.Request, storage
 		return
 	}
 
-	order, err := strconv.Atoi(userBalance.Order)
+	order, err := strconv.ParseInt(userBalance.Order, 10, 64)
 	if err != nil || !luhn.Valid(order) {
 		logger.Logger.Info("Номер заказа не прошел проверку")
 		res.WriteHeader(http.StatusUnprocessableEntity)

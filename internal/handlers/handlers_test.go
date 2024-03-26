@@ -32,8 +32,20 @@ func TestPostUserRegister(t *testing.T) {
 
 	mockDB := &mock.MockDB{
 		Users: map[int]map[string]string{
-			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC"},
-			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC"},
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "10", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"id": "3", "login": "test3", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Orders: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "status": "PROCESSED", "accrual": "10", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			4: {"number": "9347167976", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Withdrawals: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "sum": "5", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "sum": "1", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "sum": "4", "processed_at": "2024-03-19 19:35:17.662533+00"},
 		},
 	}
 
@@ -79,7 +91,7 @@ func TestPostUserRegister(t *testing.T) {
 			name: "пользователь успешно зарегистрирован и аутентифицирован",
 			url:  urlPostUserRegister,
 			body: models.User{
-				Login:    "test3",
+				Login:    "test4",
 				Password: "test3",
 			},
 			typeReqest: http.MethodPost,
@@ -131,8 +143,20 @@ func TestPostUserLogin(t *testing.T) {
 
 	mockDB := &mock.MockDB{
 		Users: map[int]map[string]string{
-			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC"},
-			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC"},
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "10", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"id": "3", "login": "test3", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Orders: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "status": "PROCESSED", "accrual": "10", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			4: {"number": "9347167976", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Withdrawals: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "sum": "5", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "sum": "1", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "sum": "4", "processed_at": "2024-03-19 19:35:17.662533+00"},
 		},
 	}
 
@@ -230,12 +254,20 @@ func TestPostUserOrders(t *testing.T) {
 
 	mockDB := &mock.MockDB{
 		Users: map[int]map[string]string{
-			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC"},
-			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC"},
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "10", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"id": "3", "login": "test3", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
 		},
 		Orders: map[int]map[string]string{
-			1: {"number": "3488214672200", "user_id": "1", "status": "NEW"},
-			2: {"number": "79927398713", "user_id": "2", "status": "NEW"},
+			1: {"number": "7950839220", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "status": "PROCESSED", "accrual": "10", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			4: {"number": "9347167976", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Withdrawals: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "sum": "5", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "sum": "1", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "sum": "4", "processed_at": "2024-03-19 19:35:17.662533+00"},
 		},
 	}
 
@@ -299,7 +331,7 @@ func TestPostUserOrders(t *testing.T) {
 		{
 			name:       "номер заказа уже был загружен этим пользователем",
 			url:        urlPostUserOrders,
-			body:       "3488214672200",
+			body:       "7950839220",
 			jwtToken:   jwtTok,
 			typeReqest: http.MethodPost,
 			want: want{
@@ -316,16 +348,6 @@ func TestPostUserOrders(t *testing.T) {
 				code: 202,
 			},
 		},
-		// {
-		// 	name:       "неверный формат запроса",
-		// 	url:        urlPostUserOrders,
-		// 	body:       "17893729974",
-		// 	jwtToken:   jwtTok,
-		// 	typeReqest: http.MethodPost,
-		// 	want: want{
-		// 		code: 400,
-		// 	},
-		// },
 		{
 			name:       "пользователь не аутентифицирован",
 			url:        urlPostUserOrders,
@@ -338,7 +360,7 @@ func TestPostUserOrders(t *testing.T) {
 		{
 			name:       "номер заказа уже был загружен другим пользователем",
 			url:        urlPostUserOrders,
-			body:       "79927398713",
+			body:       "1852074499",
 			jwtToken:   jwtTok,
 			typeReqest: http.MethodPost,
 			want: want{
@@ -355,15 +377,6 @@ func TestPostUserOrders(t *testing.T) {
 				code: 422,
 			},
 		},
-		// {
-		// 	name:       "внутренняя ошибка сервера",
-		// 	url:        urlPostUserOrders,
-		// 	body:       "17893в729974",
-		// 	typeReqest: http.MethodPost,
-		// 	want: want{
-		// 		code: 500,
-		// 	},
-		// },
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -388,14 +401,20 @@ func TestGetUserOrders(t *testing.T) {
 
 	mockDB := &mock.MockDB{
 		Users: map[int]map[string]string{
-			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC"},
-			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC"},
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "10", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"id": "3", "login": "test3", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
 		},
 		Orders: map[int]map[string]string{
-			1: {"number": "3488214672200", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
-			2: {"number": "3488214672202", "user_id": "1", "status": "PROCESSED", "accrual": "500", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
-			3: {"number": "3488214672203", "user_id": "1", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
-			4: {"number": "3488214672204", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			1: {"number": "7950839220", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "status": "PROCESSED", "accrual": "10", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			4: {"number": "9347167976", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Withdrawals: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "sum": "5", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "sum": "1", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "sum": "4", "processed_at": "2024-03-19 19:35:17.662533+00"},
 		},
 	}
 
@@ -446,7 +465,7 @@ func TestGetUserOrders(t *testing.T) {
 	jwtTok := w.Header().Get("Authorization")
 
 	bodyLogin2 := models.User{
-		Login:    "test2",
+		Login:    "test3",
 		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC",
 	}
 	bodyJSON2, _ := json.Marshal(bodyLogin2)
@@ -510,14 +529,20 @@ func TestGetUserBalance(t *testing.T) {
 
 	mockDB := &mock.MockDB{
 		Users: map[int]map[string]string{
-			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "0", "withdrawn": "0"},
-			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "10", "withdrawn": "0"},
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "10", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"id": "3", "login": "test3", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
 		},
 		Orders: map[int]map[string]string{
-			1: {"number": "3488214672200", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
-			2: {"number": "3488214672202", "user_id": "1", "status": "PROCESSED", "accrual": "500", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
-			3: {"number": "3488214672203", "user_id": "1", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
-			4: {"number": "3488214672204", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			1: {"number": "7950839220", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "status": "PROCESSED", "accrual": "10", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			4: {"number": "9347167976", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Withdrawals: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "sum": "5", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "sum": "1", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "sum": "4", "processed_at": "2024-03-19 19:35:17.662533+00"},
 		},
 	}
 
@@ -590,6 +615,145 @@ func TestGetUserBalance(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			req := httptest.NewRequest(test.typeReqest, test.url, nil)
+			w := httptest.NewRecorder()
+			req.Header.Set("Authorization", test.jwtToken)
+
+			r.ServeHTTP(w, req)
+
+			if w.Code != test.want.code {
+				t.Errorf("expected status OK; got %v", w.Code)
+			}
+
+			assert.Equal(t, test.want.code, w.Code)
+		})
+	}
+}
+
+func TestPostUserBalanceWithdraw(t *testing.T) {
+	logger.Init()
+	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
+
+	mockDB := &mock.MockDB{
+		Users: map[int]map[string]string{
+			1: {"id": "1", "login": "test", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC", "sum": "10", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"id": "2", "login": "test2", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"id": "3", "login": "test3", "password": "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3z.EfNz7rC", "sum": "0", "withdrawn": "10", "registered_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Orders: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "status": "NEW", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "status": "PROCESSED", "accrual": "10", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "status": "PROCESSING", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+			4: {"number": "9347167976", "user_id": "1", "status": "INVALID", "uploaded_at": "2024-03-19 19:35:17.662533+00"},
+		},
+		Withdrawals: map[int]map[string]string{
+			1: {"number": "7950839220", "user_id": "1", "sum": "5", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			2: {"number": "2396508901", "user_id": "1", "sum": "1", "processed_at": "2024-03-19 19:35:17.662533+00"},
+			3: {"number": "1852074499", "user_id": "2", "sum": "4", "processed_at": "2024-03-19 19:35:17.662533+00"},
+		},
+	}
+
+	storage := &store.StorageContext{}
+	storage.SetStorage(mockDB)
+
+	r := chi.NewRouter()
+	r.Use(middleware.Compress(5, "application/json", "text/html"))
+
+	r.Post(urlPostUserRegister, func(w http.ResponseWriter, r *http.Request) {
+		PostUserRegister(w, r, storage, tokenAuth)
+	})
+	r.Post(urlPostUserLogin, func(w http.ResponseWriter, r *http.Request) {
+		PostUserLogin(w, r, storage, tokenAuth)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+
+		r.Post(urlPostUserOrders, func(w http.ResponseWriter, r *http.Request) {
+			PostUserOrders(w, r, storage)
+		})
+		r.Get(urlGetUserOrders, func(w http.ResponseWriter, r *http.Request) {
+			GetUserOrders(w, r, storage)
+		})
+		r.Get(urlGetUserBalance, func(w http.ResponseWriter, r *http.Request) {
+			GetUserBalance(w, r, storage)
+		})
+		r.Post(urlPostUserBalanceWithdraw, func(w http.ResponseWriter, r *http.Request) {
+			PostUserBalanceWithdraw(w, r, storage)
+		})
+		r.Get(urlGetUserWithdrawals, func(w http.ResponseWriter, r *http.Request) {
+			GetUserWithdrawals(w, r, storage)
+		})
+	})
+
+	bodyLogin := models.User{
+		Login:    "test",
+		Password: "$2a$10$kte3HgQ6VtHaZSBVc0Cr2OSHQnVL3UB5C0mJLnPVA5W3y.EfNz7rC",
+	}
+	bodyJSON, _ := json.Marshal(bodyLogin)
+	req := httptest.NewRequest(http.MethodPost, urlPostUserLogin, bytes.NewReader(bodyJSON))
+	req.Header.Set("Accept", "application/json")
+
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+	jwtTok := w.Header().Get("Authorization")
+
+	type want struct {
+		code int
+	}
+	tests := []struct {
+		name       string
+		url        string
+		body       models.BalanceWithdrawn
+		jwtToken   string
+		typeReqest string
+		want       want
+	}{
+		{
+			name: "успешная обработка запроса",
+			url:  urlPostUserBalanceWithdraw,
+			body: models.BalanceWithdrawn{
+				Order: "8593379475",
+				Sum:   1,
+			},
+			jwtToken:   jwtTok,
+			typeReqest: http.MethodPost,
+			want: want{
+				code: 200,
+			},
+		},
+		{
+			name: "на счету недостаточно средств",
+			url:  urlPostUserBalanceWithdraw,
+			body: models.BalanceWithdrawn{
+				Order: "8593379475",
+				Sum:   100,
+			},
+			jwtToken:   jwtTok,
+			typeReqest: http.MethodPost,
+			want: want{
+				code: 402,
+			},
+		},
+		{
+			name: "неверный номер заказа",
+			url:  urlPostUserBalanceWithdraw,
+			body: models.BalanceWithdrawn{
+				Order: "7950830",
+				Sum:   1,
+			},
+			jwtToken:   jwtTok,
+			typeReqest: http.MethodPost,
+			want: want{
+				code: 422,
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			bodyJSON, _ := json.Marshal(test.body)
+			req := httptest.NewRequest(test.typeReqest, test.url, bytes.NewReader(bodyJSON))
+
 			w := httptest.NewRecorder()
 			req.Header.Set("Authorization", test.jwtToken)
 

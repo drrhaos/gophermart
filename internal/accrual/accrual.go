@@ -41,13 +41,18 @@ func UpdateStatusOrdersWorker(workerID int, storage *store.StorageContext, urlAc
 
 		statusOrder := GetStatus(ctx, job, urlAccrual)
 		if statusOrder != nil {
-			storage.UpdateStatusOrders(ctx, statusOrder)
+			err := storage.UpdateStatusOrders(ctx, statusOrder)
+			if err != nil {
+				logger.Logger.Warn("Ошибка обновления данных", zap.Error(err))
+			}
 		}
 
 	}
 }
 
 func GetStatus(ctx context.Context, number int64, urlAccrual string) *models.StatusOrdersAccrual {
+	ctx, cansel := context.WithTimeout(ctx, time.Duration(30*time.Second))
+	defer cansel()
 	var statusOrders *models.StatusOrdersAccrual
 
 	client := &http.Client{}
