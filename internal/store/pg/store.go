@@ -180,10 +180,9 @@ func (db *Database) UploadUserOrders(ctx context.Context, login string, order in
 		if errors.As(err, &duplicateEntryError) {
 			logger.Logger.Warn("Дубликат заказа")
 			return store.ErrDuplicateOrder
-		} else {
-			logger.Logger.Warn("Не удалось добавить заказ ", zap.Error(err))
-			return err
 		}
+		logger.Logger.Warn("Не удалось добавить заказ ", zap.Error(err))
+		return err
 	}
 	logger.Logger.Info("Добавлен новый заказ")
 	return nil
