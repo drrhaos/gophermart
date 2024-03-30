@@ -10,6 +10,7 @@ import (
 	"gophermart/internal/store"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"go.uber.org/zap"
@@ -51,8 +52,6 @@ func UpdateStatusOrdersWorker(workerID int, storage *store.StorageContext, urlAc
 }
 
 func GetStatus(ctx context.Context, number int64, urlAccrual string) *models.StatusOrdersAccrual {
-	ctx, cansel := context.WithTimeout(ctx, time.Duration(30*time.Second))
-	defer cansel()
 	var statusOrders *models.StatusOrdersAccrual
 
 	client := &http.Client{}
@@ -77,7 +76,14 @@ func GetStatus(ctx context.Context, number int64, urlAccrual string) *models.Sta
 		logger.Logger.Warn("заказ не зарегистрирован в системе расчёта")
 		return nil
 	case 429:
-		logger.Logger.Warn("превышено количество запросов к сервису")
+		timeSleepStr := resp.Header.Get("Retry-After")
+		timeSleep, err := strconv.ParseInt(timeSleepStr, 10, 64)
+		if err != nil {
+			logger.Logger.Warn("не удалось задать таймер")
+			return nil
+		}
+		logger.Logger.Warn(fmt.Sprintf("превышено количество запросов к сервису, ожидание %s", timeSleepStr))
+		time.Sleep(time.Duration(timeSleep))
 		return nil
 	case 500:
 		logger.Logger.Warn("внутренняя ошибка сервера системы расчёта начислений баллов лояльности")
