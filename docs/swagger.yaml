@@ -1,0 +1,240 @@
+definitions:
+  models.BalanceWithdrawn:
+    properties:
+      order:
+        description: номер заказа
+        type: string
+      sum:
+        description: сумма списания
+        type: number
+    type: object
+  models.User:
+    properties:
+      login:
+        description: логин
+        type: string
+      password:
+        description: параметр, принимающий значение gauge или counter
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/user/balance:
+    get:
+      description: Этот эндпоинт для получение текущего баланса пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
+      summary: Получение текущего баланса пользователя
+  /api/user/balance/withdraw:
+    post:
+      consumes:
+      - application/json
+      description: Этот эндпоинт на списание средств
+      parameters:
+      - description: JSON тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.BalanceWithdrawn'
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "402":
+          description: на счету недостаточно средств
+          schema:
+            type: string
+        "422":
+          description: неверный номер заказа
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
+      summary: Запрос на списание средств
+  /api/user/login:
+    post:
+      consumes:
+      - application/json
+      description: Этот эндпоинт производит аутентификацию пользователя
+      parameters:
+      - description: JSON тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      responses:
+        "200":
+          description: пользователь успешно аутентифицирован
+          schema:
+            type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: неверная пара логин/пароль
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Аутентификация пользователя
+  /api/user/orders:
+    get:
+      description: Этот эндпоинт для получения списка загруженных номеров заказов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            type: string
+        "204":
+          description: нет данных для ответа.
+          schema:
+            type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
+      summary: Получение списка загруженных номеров заказов
+    post:
+      consumes:
+      - text/plain
+      description: Этот эндпоинт загружает номера заказа
+      parameters:
+      - description: номер заказа
+        in: body
+        name: request
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: номер заказа уже был загружен этим пользователем
+          schema:
+            type: string
+        "202":
+          description: новый номер заказа принят в обработку
+          schema:
+            type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            type: string
+        "401":
+          description: пользователь не аутентифицирован
+          schema:
+            type: string
+        "409":
+          description: номер заказа уже был загружен другим пользователем
+          schema:
+            type: string
+        "422":
+          description: неверный формат номера заказа
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
+      summary: Загрузка номера заказа
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      description: Этот эндпоинт производит регистрацию пользователя
+      parameters:
+      - description: JSON тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      responses:
+        "200":
+          description: пользователь успешно аутентифицирован
+          schema:
+            type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            type: string
+        "409":
+          description: логин уже занят
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Регистрация пользователя
+  /api/user/withdrawals:
+    get:
+      description: Этот эндпоинт для получение информации о выводе средств
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            type: string
+        "204":
+          description: нет ни одного списания
+          schema:
+            type: string
+        "401":
+          description: пользователь не авторизован
+          schema:
+            type: string
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            type: string
+      security:
+      - Bearer: []
+      summary: Получение информации о выводе средств
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
