@@ -11,7 +11,7 @@ func checksum(number int64) int64 {
 		cur := number % 10
 
 		if i%2 == 0 { // even
-			cur = cur * 2
+			cur *= 2
 			if cur > 9 {
 				cur = cur%10 + cur/10
 			}
